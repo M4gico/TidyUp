@@ -1,2 +1,2 @@
 # TidyUp
-TidyUp appliation creates with PyQt
+TidyUp application creates with PyQt
