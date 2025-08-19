@@ -11,12 +11,19 @@ from Scripts.CustomObjects.ExtractIconExe import extract_icon, IconSize
 class Application:
     def __init__(self, app_path_exe: str, name: Optional[str] = None,
                  app_project_path: Optional[str] = None):
-        self.name = name
-        self._app_path_exe = app_path_exe
-        self._app_project_path = app_project_path
 
+        self.name = name
+        self._app_project_path = app_project_path
         self.icon: QIcon
 
+        self.add_application_exe(app_path_exe)
+
+    def add_application_exe(self, app_path_exe: str):
+        if isinstance(app_path_exe, str) and os.path.isfile(app_path_exe):
+            self._app_path_exe = app_path_exe
+            if self.name is None:
+                self.name = os.path.splitext(os.path.basename(app_path_exe))[0]
+            self.icon = self._extract_icon_from_exe(app_path_exe)
 
     def open_application(self) -> subprocess.Popen:
         """
@@ -48,23 +55,17 @@ class Application:
                 # If the large icon fails, try the small icon
                 icon_app = extract_icon(exe_path, IconSize.SMALL)
             except OSError:
-                return QIcon("Resources/default_icon_32x32.png")
+                print(f"Failed to extract icon from {exe_path}. Using default icon.")
+                return QIcon("../Resources/default_icon_32x32.png")
         icon_data = ctypes.string_at(icon_app, 32 * 32 * 4)
         image = QImage(icon_data, 32, 32, QImage.Format.Format_ARGB32)
 
         return QIcon(QPixmap.fromImage(image))
 
-
     #region Properties
     @property
     def app_path_exe(self):
         return self._app_path_exe
-
-    @app_path_exe.setter
-    def app_path_exe(self, path):
-        if isinstance(path, str) and os.path.isfile(path):
-            self._app_path_exe = path
-            self.icon = self._extract_icon_from_exe(path)
             
     @property
     def app_project_path(self):

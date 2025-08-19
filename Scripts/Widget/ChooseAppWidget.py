@@ -1,7 +1,7 @@
 ﻿import os
 from typing import List
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFileDialog, QLineEdit, QMessageBox
 
 from Scripts.CustomObjects.Application import Application
@@ -17,11 +17,10 @@ class ChooseAppWidget(QWidget):
         self._applications: List[Application] = []
 
         main_layout = QVBoxLayout()
-
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         main_layout.addLayout(self.choose_app_layout())
-        self.app_list_widget = ApplicationListWidget()
-        main_layout.addWidget(self.app_list_widget)
-
+        main_layout.addWidget(ApplicationListWidget(self.new_application_added))
+        main_layout.addStretch(1) # Avoid widget spacing to the bottom
         self.setLayout(main_layout)
 
     def choose_app_layout(self) -> QHBoxLayout:
