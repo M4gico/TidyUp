@@ -9,6 +9,7 @@ class ApplicationListWidget(QWidget):
 
     def __init__(self, new_app_signal: pyqtSignal):
         super().__init__()
+        self.setAcceptDrops(True)
         self.main_layout()
 
         new_app_signal.connect(self.add_application)

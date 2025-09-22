@@ -1,12 +1,13 @@
 ﻿from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QLabel
 import sys
 from PyQt6.QtWidgets import QApplication
 
 from Scripts.Widget.ChooseAppWidget import ChooseAppWidget
+from Scripts.Widget.ScreenListWidget import ScreenListWidget
 
 """
-Stucture of the app: 
+Structure of the app: 
 Choose application that we want to launch
 Create different tabs with different set of applications
 Number of screens available 
@@ -23,11 +24,25 @@ class MainWindow(QMainWindow):
         self.init_UI()
 
     def init_UI(self):
+        main_layout = QHBoxLayout()
+
+        left_layout = QVBoxLayout()
+        left_layout.addWidget(ChooseAppWidget())
+
         right_layout = QVBoxLayout()
-        right_layout.addWidget(ChooseAppWidget())
+
+        title = QLabel("Detected Screens")
+        title.setStyleSheet("font-size: 16px; font-weight: bold;")
+
+        right_layout.addWidget(title)
+        right_layout.addWidget(ScreenListWidget())
+
+        main_layout.addLayout(left_layout)
+        main_layout.addLayout(right_layout)
 
         main_widget = QWidget()
-        main_widget.setLayout(right_layout)
+        main_widget.setLayout(main_layout)
+
         self.setCentralWidget(main_widget)
 
     def btn_clicked(self):

@@ -1,8 +1,9 @@
 ﻿import os
-from typing import List
+from typing import List, Optional
 
 from PyQt6.QtCore import pyqtSignal, Qt
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFileDialog, QLineEdit, QMessageBox
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFileDialog, QLineEdit, QMessageBox, \
+    QDialog
 
 from Scripts.CustomObjects.Application import Application
 from Scripts.Widget.ApplicationListWidget import ApplicationListWidget
@@ -21,7 +22,11 @@ class ChooseAppWidget(QWidget):
         main_layout.addLayout(self.choose_app_layout())
         main_layout.addWidget(ApplicationListWidget(self.new_application_added))
         main_layout.addStretch(1) # Avoid widget spacing to the bottom
+
         self.setLayout(main_layout)
+
+        #TEMPORARY: Add a default application for testing purposes
+        self.add_application(r"C:\Users\a.binner\AppData\Local\Zen Browser\zen.exe")
 
     def choose_app_layout(self) -> QHBoxLayout:
         """
@@ -56,8 +61,16 @@ class ChooseAppWidget(QWidget):
             QMessageBox.warning(self, "Choose application error", "The selected file is not a valid executable.")
             return
 
+        #TODO: Ask if the user want to add a project path for the application
+
+        self.add_application(app_path)
+
+    def add_application(self, app_path: str, project_path: Optional[str] = None):
         self.app_path.setText(app_path)
-        new_app = Application(app_path)
+        if not project_path:
+            new_app = Application(app_path)
+        else:
+            new_app = Application(app_path, app_project_path=project_path)
         self._applications.append(new_app)
         self.new_application_added.emit(new_app)
 
