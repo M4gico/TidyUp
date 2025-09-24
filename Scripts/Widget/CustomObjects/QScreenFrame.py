@@ -1,25 +1,35 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QScreen
-from PyQt6.QtWidgets import QFrame, QVBoxLayout, QLabel
+from PyQt6.QtGui import QScreen, QPixmap
+from PyQt6.QtWidgets import QVBoxLayout, QLabel, QWidget
+import os
 
+"""
+TODO: To delete
+Pour ajouter un layout qui dépend d'un widget, rajouter le widget en paramètre de la déclaration du layout
+"""
 
-class QScreenFrame(QFrame):
+class QScreenFrame(QWidget):
 
     def __init__(self, screen: QScreen, parent = None):
         super().__init__(parent)
         self.setAcceptDrops(True)
 
-        self.screen = screen
-        self.apps = []
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(5, 5, 5, 5)
 
-        self.setFrameStyle(QFrame.Shape.StyledPanel | QFrame.Shadow.Raised)
-        self.setStyleSheet("background-color: #f0f0f0; border: 1px solid #999;")
+        # Create drop box at the top (85%)
+        drop_box = QWidget()
+        drop_box.setStyleSheet("""
+                    QWidget {
+                        background-color: rgba(255, 255, 255, 30);
+                    }
+                    """)
+        drop_box.setAcceptDrops(True)
 
-        # Ajouter un layout
-        self.layout = QVBoxLayout(self)
+        # Screen information at the bottom (15%)
+        screen_information = QLabel(f"Screen: {screen.name()}\n{screen.geometry().width()}x{screen.geometry().height()}")
+        screen_information.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # Afficher les informations de l'écran
-        screen_info = f"{screen.name()}\n{screen.geometry().width()}x{screen.geometry().height()}"
-        self.info_label = QLabel(screen_info)
-        self.info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.layout.addWidget(self.info_label)
+        # Add widgets with stretch factors (85% and 15%)
+        layout.addWidget(drop_box, 85)
+        layout.addWidget(screen_information, 15)

@@ -1,4 +1,5 @@
-﻿from PyQt6.QtGui import QIcon
+﻿from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QLabel
 import sys
 from PyQt6.QtWidgets import QApplication
@@ -30,12 +31,14 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(ChooseAppWidget())
 
         right_layout = QVBoxLayout()
+        right_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         title = QLabel("Detected Screens")
         title.setStyleSheet("font-size: 16px; font-weight: bold;")
 
         right_layout.addWidget(title)
         right_layout.addWidget(ScreenListWidget())
+        right_layout.addStretch(1)
 
         main_layout.addLayout(left_layout)
         main_layout.addLayout(right_layout)

@@ -18,8 +18,6 @@ class QApplicationDraggable(QWidget):
         self.icon.setFixedSize(32, 32)
         if application.icon:
             self.icon.setPixmap(application.icon.pixmap(QSize(32, 32)))
-            # Keep ratio of the icon
-            # self.icon.setScaledContents(True)
         else:
             QMessageBox.warning(self, "Icon Error", "The application does not have a valid icon.")
 

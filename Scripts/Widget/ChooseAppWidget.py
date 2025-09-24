@@ -26,7 +26,7 @@ class ChooseAppWidget(QWidget):
         self.setLayout(main_layout)
 
         #TEMPORARY: Add a default application for testing purposes
-        self.add_application(r"C:\Users\a.binner\AppData\Local\Zen Browser\zen.exe")
+        self.add_application(r"C:\Users\magic\AppData\Local\Programs\Microsoft VS Code\Code.exe")
 
     def choose_app_layout(self) -> QHBoxLayout:
         """
