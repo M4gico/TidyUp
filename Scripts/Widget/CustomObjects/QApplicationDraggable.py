@@ -48,7 +48,12 @@ class QApplicationDraggable(QWidget):
         if e.buttons() == Qt.MouseButton.LeftButton:
             drag = QDrag(self)
             mime = QMimeData()
-            drag.setMimeData(mime) # This is where you can set data to be transferred
+
+            # Stocker directement l'application dans le drag object
+            drag.application = self.application
+            # Utiliser un type MIME personnalisé sans données spécifiques pour reconnaitre le drop
+            mime.setText("application_drag")
+            drag.setMimeData(mime)
 
             # Add visual for dragging with icon and name
             temp_widget = QWidget()

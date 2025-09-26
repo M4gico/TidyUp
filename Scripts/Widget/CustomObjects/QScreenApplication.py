@@ -1,7 +1,7 @@
 from typing import List
 
 from PyQt6.QtGui import QScreen
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QMessageBox
 
 from Scripts.CustomObjects.Application import Application
 
@@ -26,4 +26,36 @@ class QScreenApplication(QWidget):
         self.setLayout(main_layout)
 
     def dragEnterEvent(self, event):
-        pass
+        self.verify_drag(event)
+
+    def dragMoveEvent(self, event):
+        self.verify_drag(event)
+
+    def dropEvent(self, event):
+        # Verify again that the drag is valid (mime text and attribute application)
+        if (event.mimeData().hasText() and
+                event.mimeData().text() == "application_drag" and
+                hasattr(event.source(), 'application')):
+
+            # Récupérer directement l'objet Application
+            application = event.source().application
+            self.applications.append(application)
+
+            self.number_of_applications.setText(f"{len(self.applications)} Applications")
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+            QMessageBox.warning(
+                self,
+                "Drag Error",
+                "The dropped item is not a valid application."
+            )
+
+    def verify_drag(self, event):
+        # Vérifier que c'est bien un drag d'application
+        if (event.mimeData().hasText() and
+                event.mimeData().text() == "application_drag" and
+                hasattr(event.source(), 'application')):
+            event.acceptProposedAction()
+        else:
+            event.ignore()
