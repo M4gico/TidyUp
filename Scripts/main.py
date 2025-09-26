@@ -4,7 +4,9 @@ from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QLab
 import sys
 from PyQt6.QtWidgets import QApplication
 
+from Scripts.Widget.ApplicationListWidget import ApplicationListWidget
 from Scripts.Widget.ChooseAppWidget import ChooseAppWidget
+from Scripts.Widget.ScreenWidget import ScreenWidget
 
 """
 Structure of the app: 
@@ -26,16 +28,9 @@ class MainWindow(QMainWindow):
     def init_UI(self):
         main_layout = QHBoxLayout()
 
-        left_layout = QVBoxLayout()
-        left_layout.addWidget(ChooseAppWidget())
+        left_layout = self.left_layout()
 
-        right_layout = QVBoxLayout()
-        right_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-
-        title = QLabel("Detected Screens")
-        title.setStyleSheet("font-size: 16px; font-weight: bold;")
-
-        right_layout.addWidget(title)
+        right_layout = self.right_layout()
 
         main_layout.addLayout(left_layout)
         main_layout.addLayout(right_layout)
@@ -45,9 +40,35 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(main_widget)
 
-    def btn_clicked(self):
-        print("Button was clicked")
+    def left_layout(self) -> QVBoxLayout:
+        left_layout = QVBoxLayout()
 
+        choose_app_widget = ChooseAppWidget()
+
+        application_list_widget = ApplicationListWidget(choose_app_widget.new_application_added)
+
+        left_layout.addWidget(choose_app_widget)
+        left_layout.addWidget(application_list_widget)
+        left_layout.addStretch(1)  # Avoid widget spacing to the bottom
+
+        ##TEMP## Add a default application for testing purposes
+        choose_app_widget.add_application(r"C:\Users\a.binner\AppData\Local\Zen Browser\zen.exe")
+
+        return left_layout
+
+    def right_layout(self) -> QVBoxLayout:
+        right_layout = QVBoxLayout()
+
+        title = QLabel("Detected Screens")
+        title.setStyleSheet("font-size: 16px; font-weight: bold;")
+
+        screen_widget = ScreenWidget()
+
+        right_layout.addWidget(title)
+        right_layout.addWidget(screen_widget)
+        right_layout.addStretch(1)  # Avoid widget spacing to the bottom
+
+        return right_layout
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

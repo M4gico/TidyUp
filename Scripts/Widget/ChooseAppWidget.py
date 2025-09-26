@@ -17,16 +17,9 @@ class ChooseAppWidget(QWidget):
 
         self._applications: List[Application] = []
 
-        main_layout = QVBoxLayout()
-        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        main_layout.addLayout(self.choose_app_layout())
-        main_layout.addWidget(ApplicationListWidget(self.new_application_added))
-        main_layout.addStretch(1) # Avoid widget spacing to the bottom
+        main_layout = self.choose_app_layout()
 
         self.setLayout(main_layout)
-
-        #TEMPORARY: Add a default application for testing purposes
-        self.add_application(r"C:\Users\a.binner\AppData\Local\Zen Browser\zen.exe")
 
     def choose_app_layout(self) -> QHBoxLayout:
         """
