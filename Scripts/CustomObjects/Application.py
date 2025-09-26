@@ -14,7 +14,7 @@ class Application:
 
         self.name = name
         self._app_project_path = app_project_path
-        self.icon: QIcon
+        self.icon: Optional[QIcon] = None
 
         self.add_application_exe(app_path_exe)
 
@@ -23,7 +23,13 @@ class Application:
             self._app_path_exe = app_path_exe
             if self.name is None:
                 self.name = os.path.splitext(os.path.basename(app_path_exe))[0]
-            self.icon = self._extract_icon_from_exe(app_path_exe)
+            try:
+                self.icon = self._extract_icon_from_exe(app_path_exe)
+            except Exception as e:
+                print(f"Error extracting icon: {e}")
+                self.icon = QIcon("../Resources/default_icon_32x32.png")
+        else:
+            raise ValueError(f"Invalid application path: {app_path_exe}")
 
     def open_application(self) -> subprocess.Popen:
         """

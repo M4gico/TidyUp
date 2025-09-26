@@ -5,7 +5,6 @@ import sys
 from PyQt6.QtWidgets import QApplication
 
 from Scripts.Widget.ChooseAppWidget import ChooseAppWidget
-from Scripts.Widget.ScreenListWidget import ScreenListWidget
 
 """
 Structure of the app: 
@@ -37,8 +36,6 @@ class MainWindow(QMainWindow):
         title.setStyleSheet("font-size: 16px; font-weight: bold;")
 
         right_layout.addWidget(title)
-        right_layout.addWidget(ScreenListWidget())
-        right_layout.addStretch(1)
 
         main_layout.addLayout(left_layout)
         main_layout.addLayout(right_layout)
