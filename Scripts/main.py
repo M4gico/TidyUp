@@ -49,7 +49,6 @@ class MainWindow(QMainWindow):
 
         left_layout.addWidget(choose_app_widget)
         left_layout.addWidget(application_list_widget)
-        left_layout.addStretch(1)  # Avoid widget spacing to the bottom
 
         ##TEMP## Add a default application for testing purposes
         choose_app_widget.add_application(r"C:\Users\a.binner\AppData\Local\Zen Browser\zen.exe")
@@ -66,7 +65,6 @@ class MainWindow(QMainWindow):
 
         right_layout.addWidget(title)
         right_layout.addWidget(screen_widget)
-        right_layout.addStretch(1)  # Avoid widget spacing to the bottom
 
         return right_layout
 
