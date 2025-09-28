@@ -21,8 +21,11 @@ class Application:
     def add_application_exe(self, app_path_exe: str):
         if isinstance(app_path_exe, str) and os.path.isfile(app_path_exe):
             self._app_path_exe = app_path_exe
+
             if self.name is None:
-                self.name = os.path.splitext(os.path.basename(app_path_exe))[0]
+                # Get the name without extension and put the first letter in uppercase
+                self.name = os.path.splitext(os.path.basename(app_path_exe))[0].capitalize()
+
             try:
                 self.icon = self._extract_icon_from_exe(app_path_exe)
             except Exception as e:

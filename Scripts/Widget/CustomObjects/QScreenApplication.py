@@ -1,11 +1,11 @@
 from typing import List
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QScreen
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QMessageBox, QScrollArea, QHBoxLayout
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QMessageBox, QScrollArea, QHBoxLayout, QListWidget, \
+    QListWidgetItem
 
 from Scripts.CustomObjects.Application import Application
-
 
 class QScreenApplication(QWidget):
     def __init__(self, screen: QScreen):
@@ -18,19 +18,15 @@ class QScreenApplication(QWidget):
     def init_UI(self, screen: QScreen):
         main_layout = QVBoxLayout()
 
-        # Scrollable area for application icons
-        self.scroll_area = QScrollArea()
-        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.app_list = QListWidget()
+        self.app_list.setViewMode(QListWidget.ViewMode.IconMode)
+        self.app_list.setMovement(QListWidget.Movement.Static) # Prevent items from being moved
+        self.app_list.setResizeMode(QListWidget.ResizeMode.Adjust)
+        self.app_list.setIconSize(QSize(32, 32))
+        self.app_list.setSpacing(15)
+        self.app_list.setSelectionMode(QListWidget.SelectionMode.NoSelection)
 
-        # Container widget for icons to have the layout left-aligned
-        self.icons_widget = QWidget()
-        self.icons_layout = QHBoxLayout()
-        self.icons_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.icons_widget.setLayout(self.icons_layout)
-
-        self.scroll_area.setWidget(self.icons_widget)
-        main_layout.addWidget(self.scroll_area, 85)
+        main_layout.addWidget(self.app_list)
 
         screen_name = screen.name()
         # Detect if the screen is a laptop screen (name starts with \\)
@@ -38,50 +34,38 @@ class QScreenApplication(QWidget):
             screen_name = "Laptop Screen"
 
         screen_name_label = QLabel(f"Screen: {screen_name}")
+        screen_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(screen_name_label, 15)
 
         self.setLayout(main_layout)
 
-    def add_application_icon(self, application: Application):
+    def add_application(self, application: Application):
         """
         Add the icon of the application to the scroll area
         :param application: Application received from the drag and drop
         """
-        icon_label = QLabel()
-        icon_label.setFixedSize(32, 32)
-        icon_label.setToolTip(application.name)  # Show the name on hover
-        # Prevent icon cropping
-        icon_label.setScaledContents(True)  # Allow the image to fit the label size
-        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Center the icon
-
-        if application.icon:
-            pixmap = application.icon.pixmap(32, 32)
-            if not pixmap.isNull():
-                # Resize the pixmap to fit in the QLabel
-                scaled_pixmap = pixmap.scaled(32, 32, Qt.AspectRatioMode.KeepAspectRatio,
-                                              Qt.TransformationMode.SmoothTransformation)
-                icon_label.setPixmap(scaled_pixmap)
-            else:
-                QMessageBox.warning(
-                    self,
-                    "Icon Error",
-                    f"The application {application.name} does not have a valid icon."
-                )
-                self.applications.remove(application)
-                return
-
-            icon_label.setPixmap(application.icon.pixmap(32, 32))
-        else:
+        if not application.icon or application.icon.isNull():
             QMessageBox.warning(
                 self,
                 "Icon Error",
                 f"The application {application.name} does not have a valid icon."
             )
-            self.applications.remove(application) # Remove the application if it has no icon
             return
 
-        # Add the icon to the layout of the scroll area
-        self.icons_layout.addWidget(icon_label)
+        if application in self.applications:
+            QMessageBox.information(
+                self,
+                "Duplicate Application",
+                f"The application {application.name} is already added to this screen."
+            )
+            return
+
+        item = QListWidgetItem(application.icon, application.name)
+        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
+
+        # Add the item to the list widget
+        self.app_list.addItem(item)
+        self.applications.append(application)
 
     #region Drag and Drop Events
     def dragEnterEvent(self, event):
@@ -98,9 +82,8 @@ class QScreenApplication(QWidget):
 
             # Directly retrieve the Application object
             application = event.source().application
-            self.applications.append(application)
 
-            self.add_application_icon(application)
+            self.add_application(application)
 
             event.acceptProposedAction()
         else:

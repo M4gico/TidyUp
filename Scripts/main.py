@@ -1,4 +1,6 @@
-﻿from PyQt6.QtCore import Qt
+﻿import os.path
+
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QLabel
 import sys
@@ -21,7 +23,8 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Tidy Up")
-        self.setWindowIcon(QIcon('Resources/Tidy_up_logo.png'))
+        logo_path = os.path.abspath("Resources/Tidy_up_logo.png")
+        self.setWindowIcon(QIcon(logo_path))
 
         self.init_UI()
 
@@ -51,7 +54,10 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(application_list_widget)
 
         ##TEMP## Add a default application for testing purposes
-        choose_app_widget.add_application(r"C:\Users\a.binner\AppData\Local\Zen Browser\zen.exe")
+        path = r"C:\Users\a.binner\AppData\Local\Zen Browser\zen.exe" #Laptop path
+        if not os.path.exists(path):
+            path = r"D:\Applications\Steam\steam.exe"
+        choose_app_widget.add_application(path)
 
         return left_layout
 
