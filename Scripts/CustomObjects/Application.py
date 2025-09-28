@@ -65,7 +65,7 @@ class Application:
                 icon_app = extract_icon(exe_path, IconSize.SMALL)
             except OSError:
                 print(f"Failed to extract icon from {exe_path}. Using default icon.")
-                return QIcon("../Resources/default_icon_32x32.png")
+                return QIcon(r"Resources/default_icon_32x32.png")
         icon_data = ctypes.string_at(icon_app, 32 * 32 * 4)
         image = QImage(icon_data, 32, 32, QImage.Format.Format_ARGB32)
 

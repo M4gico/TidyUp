@@ -46,10 +46,14 @@ class MainWindow(QMainWindow):
     def left_layout(self) -> QVBoxLayout:
         left_layout = QVBoxLayout()
 
+        title = QLabel("Choose Application")
+        title.setStyleSheet("font-size: 16px; font-weight: bold;")
+
         choose_app_widget = ChooseAppWidget()
 
         application_list_widget = ApplicationListWidget(choose_app_widget.new_application_added)
 
+        left_layout.addWidget(title)
         left_layout.addWidget(choose_app_widget)
         left_layout.addWidget(application_list_widget)
 
