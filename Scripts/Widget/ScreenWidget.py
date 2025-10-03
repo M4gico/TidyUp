@@ -3,7 +3,8 @@ from typing import List
 from PyQt6.QtGui import QScreen
 from PyQt6.QtWidgets import QWidget, QApplication, QHBoxLayout, QPushButton, QVBoxLayout
 
-from Scripts.Widget.CustomObjects.QScreenApplication import QScreenApplication
+from Scripts.Widget.CustomWidgets.QScreenApplication import QScreenApplication
+from Scripts.application_manager import launch_applications
 
 
 class ScreenWidget(QWidget):
@@ -28,12 +29,12 @@ class ScreenWidget(QWidget):
             screen_layout.addSpacing(10)
 
         launch_app_btn = QPushButton("Launch Applications")
-        launch_app_btn.clicked.connect(self.launch_applications)
+        launch_app_btn.clicked.connect(self.launch_applications_btn)
 
         main_layout.addLayout(screen_layout)
         main_layout.addWidget(launch_app_btn)
 
         self.setLayout(main_layout)
 
-    def launch_applications(self):
-        pass
+    def launch_applications_btn(self):
+        launch_applications(self.screen_applications)

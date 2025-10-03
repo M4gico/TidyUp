@@ -2,7 +2,7 @@ from PyQt6.QtCore import pyqtSlot, pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QScrollArea, QVBoxLayout, QLabel
 
 from Scripts.CustomObjects.Application import Application
-from Scripts.Widget.CustomObjects.QApplicationDraggable import QApplicationDraggable
+from Scripts.Widget.CustomWidgets.QApplicationDraggable import QApplicationDraggable
 
 
 class ApplicationListWidget(QWidget):

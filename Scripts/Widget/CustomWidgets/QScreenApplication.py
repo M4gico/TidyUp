@@ -13,9 +13,10 @@ class QScreenApplication(QWidget):
         self.setAcceptDrops(True)
 
         self.applications: List[Application] = [] # Store all the applications drag in the screen
-        self.init_UI(screen)
+        self.screen = screen
+        self.init_UI()
 
-    def init_UI(self, screen: QScreen):
+    def init_UI(self):
         main_layout = QVBoxLayout()
 
         self.app_list = QListWidget()
@@ -28,7 +29,7 @@ class QScreenApplication(QWidget):
 
         main_layout.addWidget(self.app_list)
 
-        screen_name = screen.name()
+        screen_name = self.screen.name()
         # Detect if the screen is a laptop screen (name starts with \\)
         if screen_name.startswith(r"\\"):
             screen_name = "Laptop Screen"

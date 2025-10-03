@@ -62,6 +62,9 @@ class MainWindow(QMainWindow):
         if not os.path.exists(path):
             path = r"D:\Applications\Steam\steam.exe"
         choose_app_widget.add_application(path)
+        choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\Programs\Microsoft VS Code\Code.exe")
+        choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\GitHubDesktop\GitHubDesktop.exe")
+        choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\Programs\BeeperTexts\Beeper.exe")
 
         return left_layout
 
