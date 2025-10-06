@@ -18,6 +18,8 @@ Number of screens available
 Drop the applications in screens 
 """
 
+#TODO: Régler bug des icon dû à la mise à l'échelle de l'écran
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -61,10 +63,18 @@ class MainWindow(QMainWindow):
         path = r"C:\Users\a.binner\AppData\Local\Zen Browser\zen.exe" #Laptop path
         if not os.path.exists(path):
             path = r"D:\Applications\Steam\steam.exe"
-        choose_app_widget.add_application(path)
-        choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\Programs\Microsoft VS Code\Code.exe")
-        choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\GitHubDesktop\GitHubDesktop.exe")
-        choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\Programs\BeeperTexts\Beeper.exe")
+        try:
+            choose_app_widget.add_application(r"C:\Applications\Obsidian\Obsidian.exe")
+        except:
+            pass
+
+        try:
+            choose_app_widget.add_application(path)
+            choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\Programs\Microsoft VS Code\Code.exe")
+            choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\GitHubDesktop\GitHubDesktop.exe")
+            choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\Programs\BeeperTexts\Beeper.exe")
+        except:
+            pass
 
         return left_layout
 

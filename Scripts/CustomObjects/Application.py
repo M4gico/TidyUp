@@ -4,6 +4,7 @@ import subprocess
 from typing import Optional
 
 from PyQt6.QtGui import QIcon, QImage, QPixmap
+from PyQt6.QtWidgets import QApplication
 
 from Scripts.CustomObjects.ExtractIconExe import extract_icon, IconSize
 
@@ -69,7 +70,9 @@ class Application:
         icon_data = ctypes.string_at(icon_app, 32 * 32 * 4)
         image = QImage(icon_data, 32, 32, QImage.Format.Format_ARGB32)
 
-        return QIcon(QPixmap.fromImage(image))
+        pixmap = QPixmap.fromImage(image)
+
+        return QIcon(pixmap)
 
     #region Properties
     @property
