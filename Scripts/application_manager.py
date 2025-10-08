@@ -16,7 +16,8 @@ def launch_applications(screen_applications: List[QScreenApplication]):
         # Give the offest in the 2 first parameters and the screen size in the 2 last parameters
         screen_size = screen.screen.geometry()
 
-        for application in screen.applications:
+        for qt_application in screen.qt_applications:
+            application = qt_application.application
             try:
                 application.open_application()
 

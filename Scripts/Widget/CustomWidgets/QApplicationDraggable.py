@@ -8,7 +8,6 @@ from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QMessageB
 from Scripts.CustomObjects.Application import Application
 
 
-#TODO: With a right click, open a tab to edit some properties (name, project path, remove...)
 class QApplicationDraggable(QWidget):
     def __init__(self, application: Application):
         super().__init__()
@@ -52,8 +51,9 @@ class QApplicationDraggable(QWidget):
             drag = QDrag(self)
             mime = QMimeData()
 
-            # Stocker directement l'application dans le drag object
-            drag.application = self.application
+            #TODO: Arreter la => doit donner une copy de cette object pour éviter qu'il soit détruit
+            #TODO: après le drop de l'application
+            drag.application = self
             # Utiliser un type MIME personnalisé sans données spécifiques pour reconnaitre le drop
             mime.setText("application_drag")
             drag.setMimeData(mime)
@@ -132,5 +132,4 @@ class QApplicationDraggable(QWidget):
 
     def remove_application(self):
         print(f"Removing application: {self.application.name}")
-        # TODO: Implement logic to remove the application
         self.deleteLater() # Example: remove the widget from the
