@@ -3,7 +3,6 @@ import time
 from typing import List, Dict, Union
 
 import psutil
-import pyautogui
 import win32con
 import win32gui
 import win32process
@@ -14,10 +13,7 @@ from Scripts.Widget.CustomWidgets.QScreenApplication import QScreenApplication
 timeout_seconds = 5
 
 """
-Launch all applications
-If the application not take the half screen, don't take it and waiting for the application in almost or in full screen
-Parse the name of the .exe and the application to try to find a good match
-Move the application to the correct screen
+Old version using win32gui to move the window
 """
 
 def launch_applications(screen_applications: List[QScreenApplication]):
@@ -27,7 +23,7 @@ def launch_applications(screen_applications: List[QScreenApplication]):
 
         for application in screen.applications:
             try:
-                process = application.open_application()
+                application.open_application()
 
                 time.sleep(2) #TODO: Change it after /to put it in a thread and wait until the app is sucessfully opened
                 # process.wait(timeout=timeout_seconds)
@@ -49,44 +45,26 @@ def _move_app_to_screen(app_name: str, screen_geometry):
     window_handler: Union[int, None] = _get_handler_of_the_app(windows_on_screen, app_name)
 
     if window_handler is None:
-        #TODO: Bizarre si trouve pas, a faire qqch
         print("Window handler not found for app:", app_name)
         return
 
     # Move the application to the screen and maxize it
-    _maximize_window_on_screen(window_handler, screen_geometry)
+    _maximize_window_on_screen(window_handler, screen_geometry, app_name)
 
-def _maximize_window_on_screen(hwnd, screen_geometry):
-    # # Activer la fenêtre pour qu'elle soit au premier plan
-    # win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
-    # win32gui.SetForegroundWindow(hwnd)
-    time.sleep(2)
+def _maximize_window_on_screen(hwnd, screen_geomtry, app_name):
+    win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+    win32gui.SetForegroundWindow(hwnd)
+    # win32con.HWND_TOP parameter put the window at the top of the Z order, meaning in front of other windows
+    # Move the window in the center of the screen not maximized to avoid issues for maximize it after on the right screen
+    # The last parameter can handle some rights but 0 is ok for now, can be used to free threads
+    result = win32gui.SetWindowPos(hwnd, win32con.HWND_TOP, int(screen_geomtry.x() + screen_geomtry.width()/2),
+                          int(screen_geomtry.y() + screen_geomtry.height()/2),
+                          int(screen_geomtry.width()/2), int(screen_geomtry.height()/2),
+                          0)
+    if result == 0:
+        raise RuntimeError(f"Failed to move {app_name} to the screen")
 
-    # Déplacer la fenêtre avec PyAutoGUI
-    # Récupérer la position actuelle de la fenêtre
-    left, top, right, bottom = win32gui.GetWindowRect(hwnd)
-    current_width = right - left
-    current_height = bottom - top
-
-    # Calculer le centre de la barre de titre (environ 15 pixels du haut)
-    title_bar_x = left + current_width // 2
-    #TODO: Faire un truc juste pour zen.exe
-    title_bar_y = top + 30  # Approximation for title bar height
-
-    # Déplacer la souris sur la barre de titre
-    pyautogui.moveTo(title_bar_x, title_bar_y)
-    time.sleep(2)
-
-    # Glisser la fenêtre vers le centre de l'écran avec un décalage vers le haut
-    target_x = screen_geometry.x() + screen_geometry.width() // 2
-    target_y = screen_geometry.y() + screen_geometry.height() // 2 - 50  # Offset de 50 pixels vers le haut
-    pyautogui.drag(target_x - title_bar_x, target_y - title_bar_y, duration=1)
-
-    time.sleep(2)
-
-    # Maximiser la fenêtre
     win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
-
 
 def _get_handler_of_the_app(windows_on_screen: Dict[str, int], app_name: str) -> Union[int, None]:
     for window_name, handler in windows_on_screen.items():

@@ -18,8 +18,6 @@ Number of screens available
 Drop the applications in screens 
 """
 
-#TODO: Régler bug des icon dû à la mise à l'échelle de l'écran
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
