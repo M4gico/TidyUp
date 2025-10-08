@@ -15,9 +15,10 @@ class QApplicationDraggable(QWidget):
         layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         self.icon = QLabel()
-        self.icon.setFixedSize(32, 32)
         if application.icon:
-            self.icon.setPixmap(application.icon.pixmap(QSize(32, 32)))
+            # QIcon choisira la meilleure taille. 32 est une bonne taille de base.
+            pixmap = application.icon.pixmap(QSize(32, 32))
+            self.icon.setPixmap(pixmap)
         else:
             QMessageBox.warning(self, "Icon Error", "The application does not have a valid icon.")
             return

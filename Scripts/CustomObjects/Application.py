@@ -5,8 +5,9 @@ from typing import Optional
 
 from PyQt6.QtGui import QIcon, QImage, QPixmap
 from PyQt6.QtWidgets import QApplication
+from Scripts.CustomObjects.ExtractIconExe import extract_icon, IconSize, user32, ICONINFO, gdi32, BITMAP
 
-from Scripts.CustomObjects.ExtractIconExe import extract_icon, IconSize
+# from Scripts.CustomObjects.ExtractIconExe import extract_icon, IconSize
 
 
 class Application:
@@ -57,23 +58,33 @@ class Application:
         :param exe_path:
         :return: QIcon object with the extracted icon
         """
+        hicon, icon_info = None, None
         try:
-            # Assuming that is a large icon
-            icon_app = extract_icon(exe_path, IconSize.LARGE)
-            width, height = 32, 32
-        except OSError:
             try:
-                # If the large icon fails, try the small icon
-                icon_app = extract_icon(exe_path, IconSize.SMALL)
-                width, height = 16, 16
+                # Assuming that is a large icon
+                hicon, icon_info, bits, width, height = extract_icon(exe_path, IconSize.LARGE)
             except OSError:
-                print(f"Failed to extract icon from {exe_path}. Using default icon.")
-                return QIcon(os.path.join(os.path.dirname(__file__), "../../Resources/default_icon_32x32.png"))
+                # If the large icon fails, try the small icon
+                hicon, icon_info, bits, width, height = extract_icon(exe_path, IconSize.SMALL)
 
-        icon_data = ctypes.string_at(icon_app, width * height * 4)
-        image = QImage(icon_data, width, height, QImage.Format.Format_ARGB32)
+            # Create QImage from raw data
+            image = QImage(bits, width, height, QImage.Format.Format_ARGB32)
+            pixmap = QPixmap.fromImage(image)
 
-        return QIcon(QPixmap.fromImage(image))
+            return QIcon(pixmap)
+
+        except (OSError, ctypes.WinError):
+            print(f"Failed to extract icon from {exe_path}. Using default icon.")
+            return QIcon(os.path.join(os.path.dirname(__file__), "../../Resources/default_icon_32x32.png"))
+        finally:
+            # Cleanup Windows objects
+            if icon_info:
+                if icon_info.hbmColor:
+                    gdi32.DeleteObject(icon_info.hbmColor)
+                if icon_info.hbmMask:
+                    gdi32.DeleteObject(icon_info.hbmMask)
+            if hicon:
+                user32.DestroyIcon(hicon)
 
     #region Properties
     @property

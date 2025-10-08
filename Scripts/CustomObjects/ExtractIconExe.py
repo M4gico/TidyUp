@@ -21,6 +21,7 @@ class ICONINFO(ctypes.Structure):
         ("hbmColor", HBITMAP)
     ]
 
+
 class RGBQUAD(ctypes.Structure):
     _fields_ = [
         ("rgbBlue", BYTE),
@@ -28,6 +29,7 @@ class RGBQUAD(ctypes.Structure):
         ("rgbRed", BYTE),
         ("rgbReserved", BYTE),
     ]
+
 
 class BITMAPINFOHEADER(ctypes.Structure):
     _fields_ = [
@@ -44,10 +46,23 @@ class BITMAPINFOHEADER(ctypes.Structure):
         ("biClrImportant", DWORD)
     ]
 
+
 class BITMAPINFO(ctypes.Structure):
     _fields_ = [
         ("bmiHeader", BITMAPINFOHEADER),
         ("bmiColors", RGBQUAD * 1),
+    ]
+
+
+class BITMAP(ctypes.Structure):
+    _fields_ = [
+        ("bmType", LONG),
+        ("bmWidth", LONG),
+        ("bmHeight", LONG),
+        ("bmWidthBytes", LONG),
+        ("bmPlanes", WORD),
+        ("bmBitsPixel", WORD),
+        ("bmBits", LPVOID),
     ]
 
 
@@ -63,6 +78,8 @@ gdi32.GetDIBits.argtypes = [
 gdi32.GetDIBits.restype = c_int
 gdi32.DeleteObject.argtypes = [HGDIOBJ]
 gdi32.DeleteObject.restype = BOOL
+gdi32.GetObjectW.argtypes = [HANDLE, c_int, LPVOID]
+gdi32.GetObjectW.restype = c_int
 shell32.ExtractIconExW.argtypes = [
     LPCWSTR, c_int, POINTER(HICON), POINTER(HICON), UINT
 ]
@@ -77,27 +94,12 @@ class IconSize(Enum):
     SMALL = 1
     LARGE = 2
 
-    @staticmethod
-    def to_wh(size: "IconSize") -> tuple[int, int]:
-        """
-        Return the actual (width, height) values for the specified icon size.
-        """
-        size_table = {
-            IconSize.SMALL: (16, 16),
-            IconSize.LARGE: (32, 32)
-        }
-        return size_table[size]
 
-
-def extract_icon(filename: str, size: IconSize) -> Array[c_char]:
+def extract_icon(filename: str, size: IconSize) -> tuple[HICON, ICONINFO, Array[c_char], int, int]:
     """
     Extract the icon from the specified `filename`, which might be
     either an executable or an `.ico` file.
     """
-    dc: HDC = gdi32.CreateCompatibleDC(0)
-    if dc == 0:
-        raise ctypes.WinError()
-
     hicon: HICON = HICON()
     extracted_icons: UINT = shell32.ExtractIconExW(
         filename,
@@ -109,35 +111,39 @@ def extract_icon(filename: str, size: IconSize) -> Array[c_char]:
     if extracted_icons != 1:
         raise ctypes.WinError()
 
-    def cleanup() -> None:
-        if icon_info.hbmColor != 0:
-            gdi32.DeleteObject(icon_info.hbmColor)
-        if icon_info.hbmMask != 0:
-            gdi32.DeleteObject(icon_info.hbmMask)
-        user32.DestroyIcon(hicon)
-
-    icon_info: ICONINFO = ICONINFO(0, 0, 0, 0, 0)
+    icon_info: ICONINFO = ICONINFO()
     if not user32.GetIconInfo(hicon, byref(icon_info)):
-        cleanup()
+        user32.DestroyIcon(hicon)
         raise ctypes.WinError()
 
-    w, h = IconSize.to_wh(size)
+    # Get bitmap info to determine dimensions
+    bmp = BITMAP()
+    gdi32.GetObjectW(icon_info.hbmColor, sizeof(BITMAP), byref(bmp))
+    width, height = bmp.bmWidth, bmp.bmHeight
+
+    dc: HDC = user32.GetDC(None)
+
     bmi: BITMAPINFO = BITMAPINFO()
     memset(byref(bmi), 0, sizeof(bmi))
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER)
-    bmi.bmiHeader.biWidth = w
-    bmi.bmiHeader.biHeight = -h
+    bmi.bmiHeader.biWidth = width
+    bmi.bmiHeader.biHeight = -height  # top-down
     bmi.bmiHeader.biPlanes = 1
     bmi.bmiHeader.biBitCount = 32
     bmi.bmiHeader.biCompression = BI_RGB
-    bmi.bmiHeader.biSizeImage = w * h * 4
-    bits = ctypes.create_string_buffer(bmi.bmiHeader.biSizeImage)
+
+    bits = ctypes.create_string_buffer(width * height * 4)
+
     copied_lines = gdi32.GetDIBits(
-        dc, icon_info.hbmColor, 0, h, bits, byref(bmi), DIB_RGB_COLORS
+        dc, icon_info.hbmColor, 0, height, bits, byref(bmi), DIB_RGB_COLORS
     )
+
+    user32.ReleaseDC(None, dc)
+
     if copied_lines == 0:
-        cleanup()
+        if icon_info.hbmColor: gdi32.DeleteObject(icon_info.hbmColor)
+        if icon_info.hbmMask: gdi32.DeleteObject(icon_info.hbmMask)
+        user32.DestroyIcon(hicon)
         raise ctypes.WinError()
 
-    cleanup()
-    return bits
+    return hicon, icon_info, bits, width, height
