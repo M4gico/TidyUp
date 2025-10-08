@@ -60,19 +60,20 @@ class Application:
         try:
             # Assuming that is a large icon
             icon_app = extract_icon(exe_path, IconSize.LARGE)
+            width, height = 32, 32
         except OSError:
             try:
                 # If the large icon fails, try the small icon
                 icon_app = extract_icon(exe_path, IconSize.SMALL)
+                width, height = 16, 16
             except OSError:
                 print(f"Failed to extract icon from {exe_path}. Using default icon.")
-                return QIcon(r"Resources/default_icon_32x32.png")
-        icon_data = ctypes.string_at(icon_app, 32 * 32 * 4)
-        image = QImage(icon_data, 32, 32, QImage.Format.Format_ARGB32)
+                return QIcon(os.path.join(os.path.dirname(__file__), "../../Resources/default_icon_32x32.png"))
 
-        pixmap = QPixmap.fromImage(image)
+        icon_data = ctypes.string_at(icon_app, width * height * 4)
+        image = QImage(icon_data, width, height, QImage.Format.Format_ARGB32)
 
-        return QIcon(pixmap)
+        return QIcon(QPixmap.fromImage(image))
 
     #region Properties
     @property

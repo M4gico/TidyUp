@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt, QSize, QMimeData, QPoint
-from PyQt6.QtGui import QDrag, QPixmap
+from PyQt6.QtGui import QDrag
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QMessageBox
 
 from Scripts.CustomObjects.Application import Application
@@ -22,8 +22,6 @@ class QApplicationDraggable(QWidget):
             QMessageBox.warning(self, "Icon Error", "The application does not have a valid icon.")
             return
 
-        # icon.setFixedSize(32, 32)
-
         label_layout = QVBoxLayout()
         name_app = QLabel(application.name)
         name_app.setStyleSheet("font-weight: bold; font-size: 14px;")
@@ -31,7 +29,7 @@ class QApplicationDraggable(QWidget):
         path_app = QLabel(application.app_path_exe)
         path_app.setStyleSheet("font-size: 10px; color: gray;")
 
-        #TODO: Maybe put the project path instead of the .exe path
+        # TODO: Maybe put the project path instead of the .exe path
         # path_process = QLabel(application.app_project_path)
 
         label_layout.addWidget(name_app)
@@ -81,4 +79,3 @@ class QApplicationDraggable(QWidget):
             drag.setHotSpot(QPoint(center_x, 0))
 
             drag.exec(Qt.DropAction.MoveAction) # Execute the drag operation with move icon
-

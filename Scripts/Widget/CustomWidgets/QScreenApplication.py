@@ -2,8 +2,7 @@ from typing import List
 
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QScreen
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QMessageBox, QScrollArea, QHBoxLayout, QListWidget, \
-    QListWidgetItem
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QMessageBox, QListWidget, QListWidgetItem
 
 from Scripts.CustomObjects.Application import Application
 
