@@ -54,22 +54,7 @@ class ChooseAppWidget(QWidget):
             QMessageBox.warning(self, "Choose application error", "The selected file is not a valid executable.")
             return
 
-        reply = QMessageBox.question(
-            self,
-            "Add Project Path",
-            "Do you want to add a project path for this application?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
-
-        project_path = None
-        if reply == QMessageBox.StandardButton.Yes:
-            project_path = QFileDialog.getExistingDirectory(
-                self,
-                "Select Project Folder",
-                ""
-            )
-
-        self.add_application(app_path, project_path)
+        self.add_application(app_path)
 
     def add_application(self, app_path: str, project_path: Optional[str] = None):
         self.app_path.setText(app_path)

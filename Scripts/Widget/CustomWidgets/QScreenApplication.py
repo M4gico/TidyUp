@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QMessageBox, QListWidg
 
 from Scripts.CustomObjects.Application import Application
 
+#TODO: Get a list of QApplicationDraggable in the side and keep the applications in a list
 class QScreenApplication(QWidget):
     def __init__(self, screen: QScreen):
         super().__init__()

@@ -23,7 +23,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Tidy Up")
-        logo_path = r"..\Resources\Tidy_up_logo.png"
+        logo_path = r".\Resources\Tidy_up_logo.png"
         self.setWindowIcon(QIcon(logo_path))
 
         self.init_UI()
@@ -69,6 +69,7 @@ class MainWindow(QMainWindow):
         try:
             choose_app_widget.add_application(path)
             choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\Programs\Microsoft VS Code\Code.exe")
+            choose_app_widget.add_application(r"D:\Applications\Unity\6000.2.6f2\Editor\Unity.exe")
             choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\GitHubDesktop\GitHubDesktop.exe")
             choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\Programs\BeeperTexts\Beeper.exe")
         except:

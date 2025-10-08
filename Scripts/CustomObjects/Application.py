@@ -43,12 +43,12 @@ class Application:
         """
         if self._app_project_path:
             # Open app with project path
-            app = [self._app_path_exe, self._app_project_path]
+            app = [self._app_path_exe, "-projectPath", self._app_project_path]
         else:
             app = [self._app_path_exe]
 
         # cwd is to set the working directory for avoid issues with relative paths
-        process = subprocess.Popen(app, cwd=os.path.dirname(self._app_path_exe))
+        process = subprocess.Popen(app)
 
         return process
 

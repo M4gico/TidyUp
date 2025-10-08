@@ -7,6 +7,7 @@ import win32con
 import win32gui
 import win32process
 from PyQt6.QtCore import QRect
+from difflib import SequenceMatcher
 
 from Scripts.Widget.CustomWidgets.QScreenApplication import QScreenApplication
 
@@ -19,14 +20,13 @@ def launch_applications(screen_applications: List[QScreenApplication]):
             try:
                 application.open_application()
 
-                time.sleep(2) #TODO: Change it after /to put it in a thread and wait until the app is sucessfully opened
+                time.sleep(5) #TODO: Change it after /to put it in a thread and wait until the app is sucessfully opened
                 # process.wait(timeout=timeout_seconds)
 
                 _move_app_to_screen(application.name, screen_size)
 
             except Exception as e:
                 raise RuntimeError(f"Failed to open application {application.name}: {e}")
-
 
 def _move_app_to_screen(app_name: str, screen_geometry):
     """
@@ -51,12 +51,10 @@ def _maximize_window_on_screen(hwnd, screen_geomtry, app_name):
     # win32con.HWND_TOP parameter put the window at the top of the Z order, meaning in front of other windows
     # Move the window in the center of the screen not maximized to avoid issues for maximize it after on the right screen
     # The last parameter can handle some rights but 0 is ok for now, can be used to free threads
-    result = win32gui.SetWindowPos(hwnd, win32con.HWND_TOP, int(screen_geomtry.x() + screen_geomtry.width()/2),
+    win32gui.SetWindowPos(hwnd, win32con.HWND_TOP, int(screen_geomtry.x() + screen_geomtry.width()/2),
                           int(screen_geomtry.y() + screen_geomtry.height()/2),
                           int(screen_geomtry.width()/2), int(screen_geomtry.height()/2),
                           0)
-    if result == 0:
-        raise RuntimeError(f"Failed to move {app_name} to the screen")
 
     win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
 
@@ -68,6 +66,30 @@ def _get_handler_of_the_app(windows_on_screen: Dict[str, int], app_name: str) ->
         if any(part in window_name_possibility for part in app_name_possibility):
             return handler
     return None
+
+
+# def _get_handler_of_the_app(windows_on_screen: Dict[str, int], app_name: str) -> Union[int, None]:
+#     best_match = None
+#     best_ratio = 0.0
+#     threshold = 0.6  # Minimum similarity score
+#
+#     app_name_lower = app_name.lower()
+#
+#     for window_name, handler in windows_on_screen.items():
+#         window_name_lower = window_name.lower()
+#
+#         # Calculate similarity ratio
+#         ratio = SequenceMatcher(None, app_name_lower, window_name_lower).ratio()
+#
+#         # Also check if app name is substring of window name
+#         if app_name_lower in window_name_lower:
+#             ratio = max(ratio, 0.8)
+#
+#         if ratio > best_ratio and ratio >= threshold:
+#             best_ratio = ratio
+#             best_match = handler
+#
+#     return best_match
 
 def _split_name(name: str) -> List[str]:
     """
@@ -106,7 +128,7 @@ def _check_window_size(screen_geometry, app_hwnd) -> bool:
     """
     #TODO: Get the size of the screen where is the app and not the screen we want to put it
 
-    #TODO: If the window is lower than half screen, put it in a list
+    #TODO: If the window is lower than half screen, put it in a list if the name match
     #TODO: and check a several times if the app is still visible
     #TODO: If it's the case, take it and move it to the screen
     left, top, right, bottom = win32gui.GetWindowRect(app_hwnd)
