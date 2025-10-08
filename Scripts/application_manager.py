@@ -10,12 +10,6 @@ from PyQt6.QtCore import QRect
 
 from Scripts.Widget.CustomWidgets.QScreenApplication import QScreenApplication
 
-timeout_seconds = 5
-
-"""
-Old version using win32gui to move the window
-"""
-
 def launch_applications(screen_applications: List[QScreenApplication]):
     for screen in screen_applications:
         # Give the offest in the 2 first parameters and the screen size in the 2 last parameters

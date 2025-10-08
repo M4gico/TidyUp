@@ -5,6 +5,7 @@ from Scripts.CustomObjects.Application import Application
 from Scripts.Widget.CustomWidgets.QApplicationDraggable import QApplicationDraggable
 
 
+#TODO: Give the choice to rename the name show of the application
 class ApplicationListWidget(QWidget):
 
     def __init__(self, new_app_signal: pyqtSignal):
