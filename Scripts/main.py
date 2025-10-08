@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Tidy Up")
-        logo_path = os.path.abspath("Resources/Tidy_up_logo.png")
+        logo_path = r"..\Resources\Tidy_up_logo.png"
         self.setWindowIcon(QIcon(logo_path))
 
         self.init_UI()

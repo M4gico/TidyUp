@@ -1,5 +1,6 @@
 ﻿"""
 Code from pythonassets.com : https://pythonassets.com/posts/extract-icon-from-executable-file-windows/
+And modified by gemini to not extract hard pixel but do this dynamically
 """
 
 from ctypes import Array, byref, c_char, memset, sizeof
