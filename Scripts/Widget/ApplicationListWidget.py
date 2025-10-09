@@ -17,11 +17,11 @@ class ApplicationListWidget(QWidget):
     def main_layout(self):
         layout = QVBoxLayout()
 
-        self._list_application = QVBoxLayout() # This will hold the list of applications
-        self._list_application.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self._list_application_layout = QVBoxLayout() # This will hold the list of applications
+        self._list_application_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         _widget_application = QWidget() # This will be the widget that contains the list of applications
-        _widget_application.setLayout(self._list_application)
+        _widget_application.setLayout(self._list_application_layout)
 
         self._scroll_area = QScrollArea()
         self._scroll_area.setWidgetResizable(True)
@@ -39,5 +39,22 @@ class ApplicationListWidget(QWidget):
         if application is None:
             raise ValueError("Application cannot be None")
 
-        self._list_application.addWidget(QApplicationDraggable(application))
-        self._list_application.addSpacing(10)
+        qt_application = QApplicationDraggable(application)
+        qt_application.remove_application_signal.connect(lambda: self.remove_application(qt_application))
+
+        self._list_application_layout.addWidget(qt_application)
+        self._list_application_layout.addSpacing(10)
+
+    def remove_application(self, qt_application: QApplicationDraggable):
+        """
+        Remove the QApplicationDraggable from the list and the spacing below
+        """
+        index = self._list_application_layout.indexOf(qt_application)
+        if index == -1:
+            return
+        # Get the spacing just after the qt application
+        spacing = self._list_application_layout.takeAt(index + 1)
+        if spacing:
+            del spacing
+
+        qt_application.deleteLater()
