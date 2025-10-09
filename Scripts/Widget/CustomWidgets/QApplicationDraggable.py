@@ -1,6 +1,6 @@
 from typing import Union
 
-from PyQt6.QtCore import Qt, QSize, QMimeData, QPoint
+from PyQt6.QtCore import Qt, QSize, QMimeData, QPoint, pyqtSignal
 from PyQt6.QtGui import QDrag, QAction
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QMessageBox, QMenu, QStyle, QDialog, \
     QInputDialog, QFileDialog
@@ -9,10 +9,17 @@ from Scripts.CustomObjects.Application import Application
 
 
 class QApplicationDraggable(QWidget):
-    def __init__(self, application: Application):
+    remove_application_signal = pyqtSignal()
+
+    def __init__(self, application: Application, name_app: str = None):
+        """
+        Widget that represents an application that can be dragged and dropped
+        name_app is provided to create a copy of the widget when dragging
+        """
         super().__init__()
 
         self.application = application
+        self.is_draggable = True
 
         layout = QHBoxLayout()
         layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -27,7 +34,11 @@ class QApplicationDraggable(QWidget):
             return
 
         label_layout = QVBoxLayout()
-        self.name_app = QLabel(application.name)
+        if name_app is None:
+            self.name_app = QLabel(application.name)
+        else:
+            self.name_app = QLabel(name_app)
+
         self.name_app.setStyleSheet("font-weight: bold; font-size: 14px;")
 
         path_app = QLabel(application.app_path_exe)
@@ -41,19 +52,18 @@ class QApplicationDraggable(QWidget):
 
         layout.addWidget(self.icon)
         layout.addLayout(label_layout)
-        # Add the draggable functionality
 
         self.setLayout(layout)
 
     def mouseMoveEvent(self, e):
+        if not self.is_draggable:
+            return
+
         # Drag if the button is pressed and moved
         if e.buttons() == Qt.MouseButton.LeftButton:
             drag = QDrag(self)
             mime = QMimeData()
 
-            #TODO: Arreter la => doit donner une copy de cette object pour éviter qu'il soit détruit
-            #TODO: après le drop de l'application
-            drag.application = self
             # Utiliser un type MIME personnalisé sans données spécifiques pour reconnaitre le drop
             mime.setText("application_drag")
             drag.setMimeData(mime)
@@ -83,7 +93,8 @@ class QApplicationDraggable(QWidget):
             # Set the mouse at the top of the drag visual
             drag.setHotSpot(QPoint(center_x, 0))
 
-            drag.exec(Qt.DropAction.MoveAction) # Execute the drag operation with move icon
+            # Execute the drag operation with move icon and a copy of this object
+            drag.exec(Qt.DropAction.CopyAction)
 
     def contextMenuEvent(self, event):
         """
@@ -131,5 +142,4 @@ class QApplicationDraggable(QWidget):
             self.application.app_project_path = project_path
 
     def remove_application(self):
-        print(f"Removing application: {self.application.name}")
-        self.deleteLater() # Example: remove the widget from the
+        self.remove_application_signal.emit()

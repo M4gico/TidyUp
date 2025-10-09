@@ -1,9 +1,10 @@
+import copy
 from typing import List
 
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QScreen
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QMessageBox, QListWidget, QListWidgetItem, QGridLayout, \
-    QScrollArea
+    QScrollArea, QAbstractItemView
 
 from Scripts.CustomObjects.Application import Application
 from Scripts.Widget.CustomWidgets.QApplicationDraggable import QApplicationDraggable
@@ -18,31 +19,13 @@ class QScreenApplication(QWidget):
         self.qt_applications: List[QApplicationDraggable] = [] # Store all the applications drag in the screen
         self.screen = screen
 
-        # Grid layout settings
-        self.grid_layout = None
-        self.num_columns = 4  # Define how many applications per row
-        self.current_row = 0
-        self.current_col = self.num_columns - 1  # Start from the rightmost column
-
         self.init_UI()
 
     def init_UI(self):
         main_layout = QVBoxLayout()
 
-        # Container widget and grid layout for applications
-        app_container = QWidget()
-        self.grid_layout = QGridLayout(app_container)
-        self.grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
-        self.grid_layout.setSpacing(10)
-
-        # Scroll area to contain the app grid
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setWidget(app_container)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-
-        main_layout.addWidget(scroll_area)
+        self.app_list_widget = QListWidget()
+        self.app_list_widget.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
 
         screen_name = self.screen.name()
         # Detect if the screen is a laptop screen (name starts with \\)
@@ -51,8 +34,9 @@ class QScreenApplication(QWidget):
 
         screen_name_label = QLabel(f"Screen: {screen_name}")
         screen_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        main_layout.addWidget(self.app_list_widget)
         main_layout.addWidget(screen_name_label)
-        main_layout.setStretch(0, 1)
 
         self.setLayout(main_layout)
 
@@ -69,7 +53,7 @@ class QScreenApplication(QWidget):
             )
             return
 
-        if qt_application in self.qt_applications:
+        if qt_application.application.name in [a.application.name for a in self.qt_applications]:
             QMessageBox.information(
                 self,
                 "Duplicate Application",
@@ -79,15 +63,32 @@ class QScreenApplication(QWidget):
 
         self.qt_applications.append(qt_application)
 
-        # Add widget to the grid
-        self.grid_layout.addWidget(qt_application, self.current_row, self.current_col)
+        qt_application.is_draggable = False
 
-        # Update column and row for the next widget
-        self.current_col -= 1
-        if self.current_col < 0:
-            self.current_col = self.num_columns - 1
-            self.current_row += 1
+        list_item = QListWidgetItem(self.app_list_widget)
+        list_item.setSizeHint(qt_application.sizeHint())
+        self.app_list_widget.addItem(list_item)
+        self.app_list_widget.setItemWidget(list_item, qt_application)
 
+        qt_application.remove_application_signal.connect(lambda: self.remove_application_from_list(qt_application, list_item))
+
+
+    def remove_application_from_list(self, qt_application: QApplicationDraggable, list_item: QListWidgetItem):
+        """
+        Remove the application from the list and the widget from the QListWidget.
+        """
+        # Find the row corresponding to the list_item
+        row = self.app_list_widget.row(list_item)
+        if row != -1:
+            # Remove the item from the QListWidget
+            self.app_list_widget.takeItem(row)
+
+        # Remove the application from the internal list
+        if qt_application in self.qt_applications:
+            self.qt_applications.remove(qt_application)
+
+        # The widget will be deleted by the caller of the signal
+        qt_application.deleteLater()
 
     #region Drag and Drop Events
     def dragEnterEvent(self, event):
@@ -101,8 +102,22 @@ class QScreenApplication(QWidget):
             # Verify again that the drag is valid (mime text and attribute application)
             if event.mimeData().hasText() and event.mimeData().text() == "application_drag":
 
-                # Directly retrieve the Application object
-                qt_application: QApplicationDraggable = event.source()
+                # Directly retrieve the QApplicationDraggable from the source
+                source_widget: QApplicationDraggable = event.source()
+
+                if not isinstance(source_widget, QApplicationDraggable):
+                    event.ignore()
+                    QMessageBox.warning(
+                        self,
+                        "Drag Error",
+                        "The dropped item is not a valid application."
+                    )
+                    return
+
+                app = copy.copy(source_widget.application)
+                app_name = copy.copy(source_widget.name_app.text())
+
+                qt_application = QApplicationDraggable(app, app_name)
 
                 self.add_application(qt_application)
 
