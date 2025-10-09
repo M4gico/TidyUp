@@ -19,7 +19,8 @@ class QApplicationDraggable(QWidget):
         super().__init__()
 
         self.application = application
-        self.is_draggable = True
+        # Know if the widget during drag and drop is copying or moving
+        self.is_move_copy = True
 
         layout = QHBoxLayout()
         layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -44,9 +45,6 @@ class QApplicationDraggable(QWidget):
         path_app = QLabel(application.app_path_exe)
         path_app.setStyleSheet("font-size: 10px; color: gray;")
 
-        # TODO: Maybe put the project path instead of the .exe path
-        # path_process = QLabel(application.app_project_path)
-
         label_layout.addWidget(self.name_app)
         label_layout.addWidget(path_app)
 
@@ -56,8 +54,6 @@ class QApplicationDraggable(QWidget):
         self.setLayout(layout)
 
     def mouseMoveEvent(self, e):
-        if not self.is_draggable:
-            return
 
         # Drag if the button is pressed and moved
         if e.buttons() == Qt.MouseButton.LeftButton:
@@ -93,9 +89,16 @@ class QApplicationDraggable(QWidget):
             # Set the mouse at the top of the drag visual
             drag.setHotSpot(QPoint(center_x, 0))
 
-            # Execute the drag operation with move icon and a copy of this object
-            drag.exec(Qt.DropAction.CopyAction)
+            # Execute the drag operation
+            if self.is_move_copy:
+                drag.exec(Qt.DropAction.CopyAction)
+            else:
 
+                result = drag.exec(Qt.DropAction.MoveAction)
+
+                # If the widget has been moved, emit a signal to delete it in the last QScreenApplication widget
+                if result == Qt.DropAction.MoveAction:
+                    pass
     def contextMenuEvent(self, event):
         """
         Create a context menu when right-clicking on the widget

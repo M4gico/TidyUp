@@ -63,15 +63,12 @@ class QScreenApplication(QWidget):
 
         self.qt_applications.append(qt_application)
 
-        qt_application.is_draggable = False
-
         list_item = QListWidgetItem(self.app_list_widget)
         list_item.setSizeHint(qt_application.sizeHint())
         self.app_list_widget.addItem(list_item)
         self.app_list_widget.setItemWidget(list_item, qt_application)
 
         qt_application.remove_application_signal.connect(lambda: self.remove_application_from_list(qt_application, list_item))
-
 
     def remove_application_from_list(self, qt_application: QApplicationDraggable, list_item: QListWidgetItem):
         """
@@ -97,6 +94,15 @@ class QScreenApplication(QWidget):
     def dragMoveEvent(self, event):
         self.verify_drag(event)
 
+    def dragLeaveEvent(self, event):
+        """
+        Call when a widget is dragged out
+        """
+        #TODO: Arreter ici =>
+        #TODO: Quand on drag out une application, il faut enlever le QListWidgetItem et enlever le widget de
+        #TODO: la liste des qt applications
+        event.accept()
+
     def dropEvent(self, event):
         try:
             # Verify again that the drag is valid (mime text and attribute application)
@@ -113,11 +119,15 @@ class QScreenApplication(QWidget):
                         "The dropped item is not a valid application."
                     )
                     return
+                is_copy = event.dropAction() == Qt.DropAction.CopyAction
+                if is_copy:
+                    app = copy.copy(source_widget.application)
+                    app_name = copy.copy(source_widget.name_app.text())
 
-                app = copy.copy(source_widget.application)
-                app_name = copy.copy(source_widget.name_app.text())
-
-                qt_application = QApplicationDraggable(app, app_name)
+                    qt_application = QApplicationDraggable(app, app_name)
+                    qt_application.is_move_copy = False
+                else:
+                    qt_application = source_widget
 
                 self.add_application(qt_application)
 

@@ -23,7 +23,13 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Tidy Up")
-        logo_path = r".\Resources\Tidy_up_logo.png"
+        # Get the absolute path to the directory containing main.py
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Get the directory of the main project
+        project_root = os.path.dirname(script_dir)
+        # Construct the path to the logo
+        logo_path = os.path.join(project_root, "Resources", "Tidy_up_logo.png")
+
         self.setWindowIcon(QIcon(logo_path))
 
         self.init_UI()
