@@ -93,12 +93,11 @@ class QApplicationDraggable(QWidget):
             if self.is_move_copy:
                 drag.exec(Qt.DropAction.CopyAction)
             else:
-
                 result = drag.exec(Qt.DropAction.MoveAction)
 
-                # If the widget has been moved, emit a signal to delete it in the last QScreenApplication widget
+                # Be sure that the application has been moved
                 if result == Qt.DropAction.MoveAction:
-                    pass
+                    self.remove_application_signal.emit()
     def contextMenuEvent(self, event):
         """
         Create a context menu when right-clicking on the widget

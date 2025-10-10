@@ -1,7 +1,7 @@
 import copy
 from typing import List
 
-from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtCore import Qt, QSize, pyqtSlot
 from PyQt6.QtGui import QScreen
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QMessageBox, QListWidget, QListWidgetItem, QGridLayout, \
     QScrollArea, QAbstractItemView
@@ -26,6 +26,7 @@ class QScreenApplication(QWidget):
 
         self.app_list_widget = QListWidget()
         self.app_list_widget.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        self.app_list_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         screen_name = self.screen.name()
         # Detect if the screen is a laptop screen (name starts with \\)
@@ -70,6 +71,7 @@ class QScreenApplication(QWidget):
 
         qt_application.remove_application_signal.connect(lambda: self.remove_application_from_list(qt_application, list_item))
 
+    @pyqtSlot()
     def remove_application_from_list(self, qt_application: QApplicationDraggable, list_item: QListWidgetItem):
         """
         Remove the application from the list and the widget from the QListWidget.
@@ -94,15 +96,6 @@ class QScreenApplication(QWidget):
     def dragMoveEvent(self, event):
         self.verify_drag(event)
 
-    def dragLeaveEvent(self, event):
-        """
-        Call when a widget is dragged out
-        """
-        #TODO: Arreter ici =>
-        #TODO: Quand on drag out une application, il faut enlever le QListWidgetItem et enlever le widget de
-        #TODO: la liste des qt applications
-        event.accept()
-
     def dropEvent(self, event):
         try:
             # Verify again that the drag is valid (mime text and attribute application)
@@ -110,6 +103,11 @@ class QScreenApplication(QWidget):
 
                 # Directly retrieve the QApplicationDraggable from the source
                 source_widget: QApplicationDraggable = event.source()
+
+                if source_widget in self.qt_applications:
+                    # If the source widget is re drop in the same screen, cancel it
+                    event.ignore()
+                    return
 
                 if not isinstance(source_widget, QApplicationDraggable):
                     event.ignore()
@@ -119,15 +117,13 @@ class QScreenApplication(QWidget):
                         "The dropped item is not a valid application."
                     )
                     return
-                is_copy = event.dropAction() == Qt.DropAction.CopyAction
-                if is_copy:
-                    app = copy.copy(source_widget.application)
-                    app_name = copy.copy(source_widget.name_app.text())
 
-                    qt_application = QApplicationDraggable(app, app_name)
-                    qt_application.is_move_copy = False
-                else:
-                    qt_application = source_widget
+                app = copy.copy(source_widget.application)
+                app_name = copy.copy(source_widget.name_app.text())
+
+                qt_application = QApplicationDraggable(app, app_name)
+                # To prevent to delete the original widget in the application list widget
+                qt_application.is_move_copy = False
 
                 self.add_application(qt_application)
 

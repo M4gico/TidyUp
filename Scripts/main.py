@@ -2,7 +2,7 @@
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QLabel
+from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QLabel, QTabWidget, QPushButton
 import sys
 from PyQt6.QtWidgets import QApplication
 
@@ -35,14 +35,29 @@ class MainWindow(QMainWindow):
         self.init_UI()
 
     def init_UI(self):
-        main_layout = QHBoxLayout()
+        main_layout = QVBoxLayout()
+
+        layout_application = QHBoxLayout()
 
         left_layout = self.left_layout()
 
         right_layout = self.right_layout()
 
-        main_layout.addLayout(left_layout)
-        main_layout.addLayout(right_layout)
+        layout_application.addLayout(left_layout)
+        layout_application.addLayout(right_layout)
+
+        layout_tab = QHBoxLayout()
+        tab_widget = QTabWidget()
+        tab_widget.addTab(QWidget(), "Tab 1")
+
+        add_tab_btn = QPushButton("Create set applications")
+        add_tab_btn.clicked.connect(lambda: tab_widget.addTab(QWidget(), f"Tab {tab_widget.count() + 1}"))
+
+        layout_tab.addWidget(add_tab_btn)
+        layout_tab.addWidget(tab_widget)
+
+        main_layout.addLayout(layout_tab)
+        main_layout.addLayout(layout_application)
 
         main_widget = QWidget()
         main_widget.setLayout(main_layout)
