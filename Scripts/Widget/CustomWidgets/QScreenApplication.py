@@ -41,10 +41,11 @@ class QScreenApplication(QWidget):
 
         self.setLayout(main_layout)
 
-    def add_application(self, qt_application: QApplicationDraggable):
+    def add_application(self, qt_application: QApplicationDraggable) -> bool:
         """
         Add the QApplicationDraggable to the scroll area
         :param qt_application: QApplicationDraggable received from the drag and drop
+        :return: True if the application was added, False otherwise
         """
         if not qt_application.application.icon or qt_application.application.icon.isNull():
             QMessageBox.warning(
@@ -52,15 +53,15 @@ class QScreenApplication(QWidget):
                 "Icon Error",
                 f"The application {qt_application.application.name} does not have a valid icon."
             )
-            return
+            return False
 
         if qt_application.application.name in [a.application.name for a in self.qt_applications]:
-            QMessageBox.information(
+            QMessageBox.warning(
                 self,
                 "Duplicate Application",
                 f"The application {qt_application.application.name} is already added to this screen."
             )
-            return
+            return False
 
         self.qt_applications.append(qt_application)
 
@@ -70,6 +71,8 @@ class QScreenApplication(QWidget):
         self.app_list_widget.setItemWidget(list_item, qt_application)
 
         qt_application.remove_application_signal.connect(lambda: self.remove_application_from_list(qt_application, list_item))
+
+        return True
 
     @pyqtSlot()
     def remove_application_from_list(self, qt_application: QApplicationDraggable, list_item: QListWidgetItem):
@@ -125,7 +128,11 @@ class QScreenApplication(QWidget):
                 # To prevent to delete the original widget in the application list widget
                 qt_application.is_move_copy = False
 
-                self.add_application(qt_application)
+                success = self.add_application(qt_application)
+
+                if not success:
+                    event.ignore()
+                    return
 
                 event.acceptProposedAction()
             else:
