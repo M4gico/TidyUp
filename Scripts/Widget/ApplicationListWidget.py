@@ -1,5 +1,7 @@
+from typing import List
+
 from PyQt6.QtCore import pyqtSlot, pyqtSignal, Qt
-from PyQt6.QtWidgets import QWidget, QScrollArea, QVBoxLayout, QLabel
+from PyQt6.QtWidgets import QWidget, QScrollArea, QVBoxLayout, QLabel, QMessageBox
 
 from Scripts.CustomObjects.Application import Application
 from Scripts.Widget.CustomWidgets.QApplicationDraggable import QApplicationDraggable
@@ -39,6 +41,16 @@ class ApplicationListWidget(QWidget):
         if application is None:
             raise ValueError("Application cannot be None")
 
+        qt_applications = self._get_qt_application_list()
+        # If the application is already in the list, do not add it
+        if application.name in [a.application.name for a in qt_applications]:
+            QMessageBox.warning(
+                self,
+                "Duplicate Application",
+                f"The application {application.name} is already in the application list."
+            )
+            return
+
         qt_application = QApplicationDraggable(application)
         qt_application.remove_application_signal.connect(lambda: self.remove_application(qt_application))
 
@@ -58,3 +70,20 @@ class ApplicationListWidget(QWidget):
             del spacing
 
         qt_application.deleteLater()
+
+    def save_settings(self) -> List[QApplicationDraggable]:
+        return self._get_qt_application_list()
+
+    def load_settings(self, qt_applications: List[QApplicationDraggable]):
+        self._remove_qt_applications() # Remove all applications before loading new ones
+        for app in qt_applications:
+            self.add_application(app.application)
+
+    def _get_qt_application_list(self) -> List[QApplicationDraggable]:
+        widgets = [self._list_application_layout.itemAt(i).widget() for i in range(self._list_application_layout.count()) if self._list_application_layout.itemAt(i).widget() is not None]
+        qt_application_widgets = [w for w in widgets if isinstance(w, QApplicationDraggable)]
+        return qt_application_widgets
+
+    def _remove_qt_applications(self):
+        for app in self._get_qt_application_list():
+            self.remove_application(app)

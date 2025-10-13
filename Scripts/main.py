@@ -46,15 +46,7 @@ class MainWindow(QMainWindow):
         layout_application.addLayout(left_layout)
         layout_application.addLayout(right_layout)
 
-        layout_tab = QHBoxLayout()
-        tab_widget = QTabWidget()
-        tab_widget.addTab(QWidget(), "Tab 1")
-
-        add_tab_btn = QPushButton("Create set applications")
-        add_tab_btn.clicked.connect(lambda: tab_widget.addTab(QWidget(), f"Tab {tab_widget.count() + 1}"))
-
-        layout_tab.addWidget(add_tab_btn)
-        layout_tab.addWidget(tab_widget)
+        layout_tab = self.tab_layout()
 
         main_layout.addLayout(layout_tab)
         main_layout.addLayout(layout_application)
@@ -63,6 +55,21 @@ class MainWindow(QMainWindow):
         main_widget.setLayout(main_layout)
 
         self.setCentralWidget(main_widget)
+
+    def tab_layout(self) -> QHBoxLayout:
+        layout_tab = QHBoxLayout()
+        self.tab_widget = QTabWidget()
+        self.tab_widget.addTab(QWidget(), "Tab 1")
+
+        add_tab_btn = QPushButton("Create set applications")
+        add_tab_btn.clicked.connect(self.create_new_tab)
+
+        layout_tab.addWidget(add_tab_btn)
+        layout_tab.addWidget(self.tab_widget)
+        return layout_tab
+
+    def create_new_tab(self):
+        self.tab_widget.addTab(QWidget(), f"Tab {self.tab_widget.count() + 1}")
 
     def left_layout(self) -> QVBoxLayout:
         left_layout = QVBoxLayout()

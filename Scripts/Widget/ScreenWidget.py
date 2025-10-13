@@ -1,7 +1,7 @@
 from typing import List
 
 from PyQt6.QtGui import QScreen
-from PyQt6.QtWidgets import QWidget, QApplication, QHBoxLayout, QPushButton, QVBoxLayout
+from PyQt6.QtWidgets import QWidget, QApplication, QHBoxLayout, QPushButton, QVBoxLayout, QMessageBox
 
 from Scripts.Widget.CustomWidgets.QScreenApplication import QScreenApplication
 from Scripts.application_manager import launch_applications
@@ -19,22 +19,47 @@ class ScreenWidget(QWidget):
     def init_UI(self):
         main_layout = QVBoxLayout()
 
-        screen_layout = QHBoxLayout()
+        self.screen_layout = QHBoxLayout()
 
-        for screen in self.screens:
-            screen_app = QScreenApplication(screen)
-            self.screen_applications.append(screen_app)
 
-            screen_layout.addWidget(screen_app)
-            screen_layout.addSpacing(10)
 
         launch_app_btn = QPushButton("Launch Applications")
-        launch_app_btn.clicked.connect(self.launch_applications_btn)
+        launch_app_btn.clicked.connect(lambda : launch_applications(self.screen_applications))
 
-        main_layout.addLayout(screen_layout)
+        main_layout.addLayout(self.screen_layout)
         main_layout.addWidget(launch_app_btn)
 
         self.setLayout(main_layout)
 
-    def launch_applications_btn(self):
-        launch_applications(self.screen_applications)
+    def create_screens(self, screens_applications: List[QScreenApplication] = None):
+        """
+        Create the screens on the UI
+        :param screens_applications: List of QScreenApplication if it calls by load settings
+        """
+        if screens_applications:
+            if len(screens_applications) != len(self.screens):
+                QMessageBox.warning(
+                    self,
+                    "Screen Error",
+                    "The number of screens on the system is not the same as the saved configuration."
+                )
+                return
+
+        for i, screen in enumerate(self.screens):
+            if screens_applications:
+                screen_app = screens_applications[i]
+            else:
+                screen_app = QScreenApplication(screen)
+
+            self.screen_applications.append(screen_app)
+
+            self.screen_layout.addWidget(screen_app)
+            self.screen_layout.addSpacing(10)
+
+    def load_settings(self, screens_applications: List[QScreenApplication]):
+        self.create_screens(screens_applications)
+
+    def save_settings(self) -> List[QScreenApplication]:
+        return self.screen_applications
+
+

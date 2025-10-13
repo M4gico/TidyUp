@@ -10,6 +10,8 @@ from Scripts.CustomObjects.Application import Application
 
 class QApplicationDraggable(QWidget):
     remove_application_signal = pyqtSignal()
+    # Use to save the application state in QSettings
+    application_modification_signal = pyqtSignal()
 
     def __init__(self, application: Application, name_app: str = None):
         """
@@ -17,6 +19,8 @@ class QApplicationDraggable(QWidget):
         name_app is provided to create a copy of the widget when dragging
         """
         super().__init__()
+
+        print("Creating app")
 
         self.application = application
         # Know if the widget during drag and drop is copying or moving
@@ -51,10 +55,11 @@ class QApplicationDraggable(QWidget):
         layout.addWidget(self.icon)
         layout.addLayout(label_layout)
 
+        self.application_modification_signal.emit()
+
         self.setLayout(layout)
 
     def mouseMoveEvent(self, e):
-
         # Drag if the button is pressed and moved
         if e.buttons() == Qt.MouseButton.LeftButton:
             drag = QDrag(self)
@@ -144,4 +149,5 @@ class QApplicationDraggable(QWidget):
             self.application.app_project_path = project_path
 
     def remove_application(self):
+        self.application_modification_signal.emit()
         self.remove_application_signal.emit()
