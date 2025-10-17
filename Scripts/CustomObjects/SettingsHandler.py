@@ -24,16 +24,7 @@ class SettingsHandler:
             self.application_list = application_list
             self.screen_list = screen_list
 
-    def save_settings(self):
-        #TODO: Save the settings compared of the tab select
-        self.settings.setValue("applicationList", self.application_list.save_settings())
-        self.settings.setValue("screenList", self.screen_list.save_settings())
 
-    def load_settings(self):
-        # Return None if no settings found
-        application_list = self.settings.value("applicationList", None)
-        screen_list = self.settings.value("screenList", None)
-        return application_list, screen_list
 
 if __name__ == '__main__':
     settings = SettingsHandler()

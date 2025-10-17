@@ -55,6 +55,12 @@ class MainWindow(QMainWindow):
 
         layout_tab = self.tab_layout()
 
+        application_list, screen_list = self.load_settings()
+        if application_list and screen_list:
+            self.application_list_widget.load_settings(application_list)
+            self.screen_widget.load_settings(screen_list)
+            print("Settings loaded successfully.")
+
         main_layout.addLayout(layout_tab)
         main_layout.addLayout(layout_application)
 
@@ -124,6 +130,28 @@ class MainWindow(QMainWindow):
         right_layout.addWidget(self.screen_widget)
 
         return right_layout
+
+    def closeEvent(self, event):
+        """Override the close event to save settings before application closed"""
+        self.save_settings()
+        event.accept()
+
+    def save_settings(self):
+        #TODO: Save the settings compared of the tab select
+
+        #TODO: Arreter ici -> Pour sauvegarder, on ne peut que prendre des objets simples
+        #TODO: Donc juste sauvegarder nom de la Qapplication, et tout les paramètres de l'objet Application
+        #TODO: Changer les méthodes save_settings et load_settings des widgets pour qu'ils retournent des objets simples (dictionnaires)
+        self.settings.setValue("applicationList", self.application_list_widget.save_settings())
+        self.settings.setValue("screenList", self.screen_widget.save_settings())
+
+    def load_settings(self):
+        # Return None if no settings found
+        application_list = self.settings.value("applicationList", None)
+        screen_list = self.settings.value("screenList", None)
+        if any(setting is None for setting in [application_list, screen_list]):
+            return None, None
+        return application_list, screen_list
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

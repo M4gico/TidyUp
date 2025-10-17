@@ -52,8 +52,6 @@ class QApplicationDraggable(QWidget):
         layout.addWidget(self.icon)
         layout.addLayout(label_layout)
 
-        self.save_settings()
-
         self.setLayout(layout)
 
     def mouseMoveEvent(self, e):
@@ -129,7 +127,6 @@ class QApplicationDraggable(QWidget):
         new_name = self._ask_user_new_name()
         if new_name:
             self.name_app.setText(new_name)
-            self.save_settings()
 
     def _ask_user_new_name(self) -> Union[str, None]:
         new_name, ok = QInputDialog.getText(self, "Change name application", "Enter new name: ", text=self.name_app.text())
@@ -146,12 +143,6 @@ class QApplicationDraggable(QWidget):
         )
         if project_path:
             self.application.app_project_path = project_path
-            self.save_settings()
 
     def remove_application(self):
-        self.save_settings()
         self.remove_application_signal.emit()
-
-    def save_settings(self):
-        """Save the settings when an application have modification"""
-        SettingsHandler().save_settings()
