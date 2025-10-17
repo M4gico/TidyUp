@@ -21,7 +21,7 @@ class ScreenWidget(QWidget):
 
         self.screen_layout = QHBoxLayout()
 
-
+        self.create_screens()
 
         launch_app_btn = QPushButton("Launch Applications")
         launch_app_btn.clicked.connect(lambda : launch_applications(self.screen_applications))

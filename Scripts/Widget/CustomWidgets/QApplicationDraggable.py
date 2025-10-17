@@ -6,12 +6,11 @@ from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QMessageB
     QInputDialog, QFileDialog
 
 from Scripts.CustomObjects.Application import Application
+from Scripts.CustomObjects.SettingsHandler import SettingsHandler
 
 
 class QApplicationDraggable(QWidget):
     remove_application_signal = pyqtSignal()
-    # Use to save the application state in QSettings
-    application_modification_signal = pyqtSignal()
 
     def __init__(self, application: Application, name_app: str = None):
         """
@@ -19,8 +18,6 @@ class QApplicationDraggable(QWidget):
         name_app is provided to create a copy of the widget when dragging
         """
         super().__init__()
-
-        print("Creating app")
 
         self.application = application
         # Know if the widget during drag and drop is copying or moving
@@ -55,7 +52,7 @@ class QApplicationDraggable(QWidget):
         layout.addWidget(self.icon)
         layout.addLayout(label_layout)
 
-        self.application_modification_signal.emit()
+        self.save_settings()
 
         self.setLayout(layout)
 
@@ -103,6 +100,7 @@ class QApplicationDraggable(QWidget):
                 # Be sure that the application has been moved
                 if result == Qt.DropAction.MoveAction:
                     self.remove_application_signal.emit()
+
     def contextMenuEvent(self, event):
         """
         Create a context menu when right-clicking on the widget
@@ -131,6 +129,7 @@ class QApplicationDraggable(QWidget):
         new_name = self._ask_user_new_name()
         if new_name:
             self.name_app.setText(new_name)
+            self.save_settings()
 
     def _ask_user_new_name(self) -> Union[str, None]:
         new_name, ok = QInputDialog.getText(self, "Change name application", "Enter new name: ", text=self.name_app.text())
@@ -147,7 +146,12 @@ class QApplicationDraggable(QWidget):
         )
         if project_path:
             self.application.app_project_path = project_path
+            self.save_settings()
 
     def remove_application(self):
-        self.application_modification_signal.emit()
+        self.save_settings()
         self.remove_application_signal.emit()
+
+    def save_settings(self):
+        """Save the settings when an application have modification"""
+        SettingsHandler().save_settings()

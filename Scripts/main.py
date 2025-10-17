@@ -1,11 +1,13 @@
 ﻿import os.path
+from threading import Lock
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSettings
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QLabel, QTabWidget, QPushButton
 import sys
 from PyQt6.QtWidgets import QApplication
 
+from Scripts.CustomObjects.SettingsHandler import SettingsHandler
 from Scripts.Widget.ApplicationListWidget import ApplicationListWidget
 from Scripts.Widget.ChooseAppWidget import ChooseAppWidget
 from Scripts.Widget.ScreenWidget import ScreenWidget
@@ -19,6 +21,8 @@ Drop the applications in screens
 """
 
 class MainWindow(QMainWindow):
+    #Singlton of the main window
+
     def __init__(self):
         super().__init__()
 
@@ -36,6 +40,9 @@ class MainWindow(QMainWindow):
 
     def init_UI(self):
         main_layout = QVBoxLayout()
+
+        # Save settings between sessions automatically
+        self.settings = QSettings("M4gico", "TidyUp")
 
         layout_application = QHBoxLayout()
 
@@ -79,11 +86,11 @@ class MainWindow(QMainWindow):
 
         choose_app_widget = ChooseAppWidget()
 
-        application_list_widget = ApplicationListWidget(choose_app_widget.new_application_added)
+        self.application_list_widget = ApplicationListWidget(choose_app_widget.new_application_added)
 
         left_layout.addWidget(title)
         left_layout.addWidget(choose_app_widget)
-        left_layout.addWidget(application_list_widget)
+        left_layout.addWidget(self.application_list_widget)
 
         ##TEMP## Add a default application for testing purposes
         path = r"C:\Users\a.binner\AppData\Local\Zen Browser\zen.exe" #Laptop path
@@ -111,10 +118,10 @@ class MainWindow(QMainWindow):
         title = QLabel("Detected Screens")
         title.setStyleSheet("font-size: 16px; font-weight: bold;")
 
-        screen_widget = ScreenWidget()
+        self.screen_widget = ScreenWidget()
 
         right_layout.addWidget(title)
-        right_layout.addWidget(screen_widget)
+        right_layout.addWidget(self.screen_widget)
 
         return right_layout
 
