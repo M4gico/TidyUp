@@ -97,6 +97,7 @@ class Application:
     
     @app_project_path.setter
     def app_project_path(self, path):
+        """Check if the directory exist"""
         if isinstance(path, str) and (os.path.isdir(path) or os.path.isfile(path)):
             self._app_project_path = path
 

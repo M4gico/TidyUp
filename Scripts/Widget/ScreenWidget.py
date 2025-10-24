@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from PyQt6.QtGui import QScreen
 from PyQt6.QtWidgets import QWidget, QApplication, QHBoxLayout, QPushButton, QVBoxLayout, QMessageBox
@@ -56,10 +56,15 @@ class ScreenWidget(QWidget):
             self.screen_layout.addWidget(screen_app)
             self.screen_layout.addSpacing(10)
 
-    def load_settings(self, screens_applications: List[QScreenApplication]):
+    def load_settings(self, screens_applications: List[Dict]):
         self.create_screens(screens_applications)
 
     def save_settings(self) -> List[QScreenApplication]:
+        """Save the QApplicationDraggable in each screens"""
+        screens: List[Dict]= []
+        #TODO: STOP HERE
+        # for screen
+
         return self.screen_applications
 
 

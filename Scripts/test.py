@@ -1,11 +1,14 @@
-﻿import wmi
+﻿dicto = []
 
-def get_monitor_manufacturers():
-    c = wmi.WMI()
-    obj = wmi.WMI().Win32_PnPEntity(ConfigManagerErrorCode=0)
-    for monitor in obj:
-        print(f"Fabricant: {monitor.MonitorManufacturer}")
-        print(f"Type: {monitor.MonitorType}")
+dicto.append({
+    "name": "rr",
+    "age": "19"
+})
 
-if __name__ == "__main__":
-    get_monitor_manufacturers()
+dicto.append({
+    "name": "ss",
+    "age": "87"
+})
+
+for dic in dicto:
+    print(dic)

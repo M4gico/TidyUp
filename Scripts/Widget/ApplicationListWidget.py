@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from PyQt6.QtCore import pyqtSlot, pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QScrollArea, QVBoxLayout, QLabel, QMessageBox
@@ -71,13 +71,35 @@ class ApplicationListWidget(QWidget):
 
         qt_application.deleteLater()
 
-    def save_settings(self) -> List[QApplicationDraggable]:
-        return self._get_qt_application_list()
+    def save_settings(self) -> List[Dict]:
+        return self._directory_qt_creation()
 
-    def load_settings(self, qt_applications: List[QApplicationDraggable]):
+    def load_settings(self, qt_dict: List[Dict]):
         self._remove_qt_applications() # Remove all applications before loading new ones
+        qt_applications: List[QApplicationDraggable] = []
+
+        # Create the qt application from the value in dictionaries
+        for dict in qt_dict:
+            application = Application(dict["app_path_exe"], dict["app_name"], dict["app_project_path"])
+            qt_applications.append(QApplicationDraggable(application, dict["name_qt"]))
+
         for app in qt_applications:
             self.add_application(app.application)
+
+    def _directory_qt_creation(self) -> List[Dict]:
+            qt_applications = self._get_qt_application_list()
+            qt_dict = []
+
+            for qt_app in qt_applications:
+                application = qt_app.application
+                qt_dict.append({
+                    "name_qt": qt_app.name_app,
+                    "app_path_exe": application.app_path_exe,
+                    "app_name": application.name,
+                    "app_project_path": application.app_project_path
+                })
+
+            return qt_dict
 
     def _get_qt_application_list(self) -> List[QApplicationDraggable]:
         widgets = [self._list_application_layout.itemAt(i).widget() for i in range(self._list_application_layout.count()) if self._list_application_layout.itemAt(i).widget() is not None]
@@ -87,3 +109,4 @@ class ApplicationListWidget(QWidget):
     def _remove_qt_applications(self):
         for app in self._get_qt_application_list():
             self.remove_application(app)
+

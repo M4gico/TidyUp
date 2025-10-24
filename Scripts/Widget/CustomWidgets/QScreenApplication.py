@@ -28,12 +28,12 @@ class QScreenApplication(QWidget):
         self.app_list_widget.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
         self.app_list_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-        screen_name = self.screen.name()
+        self.screen_name = self.screen.name()
         # Detect if the screen is a laptop screen (name starts with \\)
-        if screen_name.startswith(r"\\"):
-            screen_name = "Laptop Screen"
+        if self.screen_name.startswith(r"\\"):
+            self.screen_name = "Laptop Screen"
 
-        screen_name_label = QLabel(f"Screen: {screen_name}")
+        screen_name_label = QLabel(f"Screen: {self.screen_name}")
         screen_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         main_layout.addWidget(self.app_list_widget)
