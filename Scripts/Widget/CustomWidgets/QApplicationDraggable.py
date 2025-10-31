@@ -68,7 +68,7 @@ class QApplicationDraggable(QWidget):
             temp_widget = QWidget()
             temp_layout = QHBoxLayout()
 
-            # Can't use existing icon because it will instantly delete it after drag the application
+            # Can't use existing icon label because it will instantly delete it after drag the application
             temp_icon = QLabel()
             if self.application.icon:
                 temp_icon.setPixmap(self.application.icon.pixmap(QSize(32, 32)))
@@ -119,9 +119,9 @@ class QApplicationDraggable(QWidget):
         remove_app_action.triggered.connect(self.remove_application)
 
         # Get the relative position of the topright of the icon and convert it to global position of the application
-        icon_top_right = self.mapToGlobal(self.icon.geometry().topRight())
+        top_right_pos = self.mapToGlobal(self.icon.geometry().topRight())
         # Display the context menu at the top right of the icon
-        context_menu.exec(icon_top_right)
+        context_menu.exec(top_right_pos)
 
     def change_application_name(self):
         new_name = self._ask_user_new_name()
