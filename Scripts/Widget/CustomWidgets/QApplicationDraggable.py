@@ -26,11 +26,11 @@ class QApplicationDraggable(QWidget):
         layout = QHBoxLayout()
         layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
-        self.icon = QLabel()
+        self.icon_label = QLabel()
         if application.icon:
             # QIcon choisira la meilleure taille. 32 est une bonne taille de base.
             pixmap = application.icon.pixmap(QSize(32, 32))
-            self.icon.setPixmap(pixmap)
+            self.icon_label.setPixmap(pixmap)
         else:
             QMessageBox.warning(self, "Icon Error", "The application does not have a valid icon.")
             return
@@ -49,7 +49,7 @@ class QApplicationDraggable(QWidget):
         label_layout.addWidget(self.name_app)
         label_layout.addWidget(path_app)
 
-        layout.addWidget(self.icon)
+        layout.addWidget(self.icon_label)
         layout.addLayout(label_layout)
 
         self.setLayout(layout)
@@ -119,7 +119,7 @@ class QApplicationDraggable(QWidget):
         remove_app_action.triggered.connect(self.remove_application)
 
         # Get the relative position of the topright of the icon and convert it to global position of the application
-        top_right_pos = self.mapToGlobal(self.icon.geometry().topRight())
+        top_right_pos = self.mapToGlobal(self.icon_label.geometry().topRight())
         # Display the context menu at the top right of the icon
         context_menu.exec(top_right_pos)
 

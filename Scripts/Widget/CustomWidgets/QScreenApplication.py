@@ -65,9 +65,13 @@ class QScreenApplication(QWidget):
 
         self.qt_applications.append(qt_application)
 
+        # Add a new item in the list widget
         list_item = QListWidgetItem(self.app_list_widget)
+        # Set the size that will be used to display the widget
         list_item.setSizeHint(qt_application.sizeHint())
+        # Add the widget to the list item
         self.app_list_widget.addItem(list_item)
+        # Insert the widget in the list item
         self.app_list_widget.setItemWidget(list_item, qt_application)
 
         qt_application.remove_application_signal.connect(lambda: self.remove_application_from_list(qt_application, list_item))
