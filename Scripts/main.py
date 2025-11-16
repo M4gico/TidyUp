@@ -82,6 +82,7 @@ class MainWindow(QMainWindow):
         return layout_tab
 
     def create_new_tab(self):
+        self.save_settings()
         self.tab_widget.addTab(QWidget(), f"Tab {self.tab_widget.count() + 1}")
 
     def left_layout(self) -> QVBoxLayout:
@@ -138,10 +139,6 @@ class MainWindow(QMainWindow):
 
     def save_settings(self):
         #TODO: Save the settings compared of the tab select
-
-        #TODO: Arreter ici -> Pour sauvegarder, on ne peut que prendre des objets simples
-        #TODO: Donc juste sauvegarder nom de la Qapplication, et tout les paramètres de l'objet Application
-        #TODO: Changer les méthodes save_settings et load_settings des widgets pour qu'ils retournent des objets simples (dictionnaires)
         self.settings.setValue("applicationList", self.application_list_widget.save_settings())
         self.settings.setValue("screenList", self.screen_widget.save_settings())
 

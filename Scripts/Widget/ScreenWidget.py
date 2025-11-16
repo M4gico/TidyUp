@@ -37,6 +37,7 @@ class ScreenWidget(QWidget):
         :param screens_applications: List of QScreenApplication if it calls by load settings
         """
         if screens_applications:
+            # If the number of screens detected on the system is different from the saved configuration, show a warning
             if len(screens_applications) != len(self.screens):
                 QMessageBox.warning(
                     self,
@@ -59,12 +60,16 @@ class ScreenWidget(QWidget):
     def load_settings(self, screens_applications: List[Dict]):
         self.create_screens(screens_applications)
 
-    def save_settings(self) -> List[QScreenApplication]:
-        """Save the QApplicationDraggable in each screens"""
-        screens: List[Dict]= []
-        #TODO: STOP HERE
-        # for screen
+    def save_settings(self) -> List[Dict]:
+        """
+        Save the QApplicationDraggable for each screens
+        For each screen, get the list of QApplicationDraggable and save them in a list of QScreenApplication
+        To know which screen is it, just get the screen name from QScreenApplication
+        """
+        screen_applications_dict: List[Dict] = []
+        for qt_screens in self.screen_applications:
+            screen_applications_dict.append(qt_screens.save_settings())
 
-        return self.screen_applications
+        return screen_applications_dict
 
 

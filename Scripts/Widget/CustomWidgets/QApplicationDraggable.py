@@ -146,3 +146,11 @@ class QApplicationDraggable(QWidget):
 
     def remove_application(self):
         self.remove_application_signal.emit()
+
+    def save_settings(self) -> dict:
+        return {
+            "name_qt": self.name_app.text(),
+            "app_path_exe": self.application.app_path_exe,
+            "app_name": self.application.name,
+            "app_project_path": self.application.app_project_path
+        }

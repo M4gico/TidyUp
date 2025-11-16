@@ -156,3 +156,19 @@ class QScreenApplication(QWidget):
         else:
             event.ignore()
     #endregion
+
+    def save_settings(self) -> dict:
+        """
+        Save the QApplicationDraggable for this screen
+        :return: List of dictionaries representing each QApplicationDraggable
+        """
+        # Create the screen name to find the right screen during load settings
+        dict_to_return = {
+            "screen_name": self.screen_name,
+        }
+
+        # Store the list of QApplicationDraggable in the screen
+        for i, qt_application in enumerate(self.qt_applications):
+            dict_to_return[f"qt_app_{i}"] = qt_application.save_settings()
+
+        return dict_to_return

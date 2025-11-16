@@ -91,13 +91,7 @@ class ApplicationListWidget(QWidget):
             qt_dict = []
 
             for qt_app in qt_applications:
-                application = qt_app.application
-                qt_dict.append({
-                    "name_qt": qt_app.name_app,
-                    "app_path_exe": application.app_path_exe,
-                    "app_name": application.name,
-                    "app_project_path": application.app_project_path
-                })
+                qt_dict.append(qt_app.save_settings())
 
             return qt_dict
 
