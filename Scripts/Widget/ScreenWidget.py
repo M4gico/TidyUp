@@ -31,26 +31,14 @@ class ScreenWidget(QWidget):
 
         self.setLayout(main_layout)
 
-    def create_screens(self, screens_applications: List[QScreenApplication] = None):
+    def create_screens(self):
         """
         Create the screens on the UI
         :param screens_applications: List of QScreenApplication if it calls by load settings
         """
-        if screens_applications:
-            # If the number of screens detected on the system is different from the saved configuration, show a warning
-            if len(screens_applications) != len(self.screens):
-                QMessageBox.warning(
-                    self,
-                    "Screen Error",
-                    "The number of screens on the system is not the same as the saved configuration."
-                )
-                return
 
-        for i, screen in enumerate(self.screens):
-            if screens_applications:
-                screen_app = screens_applications[i]
-            else:
-                screen_app = QScreenApplication(screen)
+        for screen in self.screens:
+            screen_app = QScreenApplication(screen)
 
             self.screen_applications.append(screen_app)
 
@@ -58,7 +46,52 @@ class ScreenWidget(QWidget):
             self.screen_layout.addSpacing(10)
 
     def load_settings(self, screens_applications: List[Dict]):
-        self.create_screens(screens_applications)
+        if screens_applications:
+            if len(screens_applications) != len(self.screens):
+                QMessageBox.warning(
+                    self,
+                    "Screen Error",
+                    "The number of screens on the system is not the same as the saved configuration."
+                )
+                return
+        #TODO: Remove all the QApplicationDraggable from each QScreenApplication before loading the settings
+        self.load_qt_applications_to_qt_screen(screens_applications)
+
+    def load_qt_applications_to_qt_screen(self, screens_applications: List[Dict]):
+        """Add QApplicationDraggable to each QScreenApplication from the saved settings"""
+
+        for screen_dict in screens_applications:
+            # Get the screen to create the object
+            screen_name = screen_dict["screen_name"]
+            if screen_name not in ([s.name() for s in self.screens] + ["Laptop Screen"]):
+                QMessageBox.warning(
+                    self,
+                    "Screen Error",
+                    f"The screen {screen_name} saved in the settings is not detected on the system."
+                )
+                continue
+
+            # Get the QScreen reference from the screen name save
+            q_screen = None
+            for screen in self.screens:
+                if screen.name() == screen_name:
+                    q_screen = screen
+                    break
+
+                # Check for laptop screen
+                if screen.name().startswith(r"\\") and screen_name == "Laptop Screen":
+                    q_screen = screen
+                    break
+
+            # Get the QScreenApplication reference
+            qt_screen = None
+            for screen_app in self.screen_applications:
+                if screen_app.screen == q_screen:
+                    qt_screen = screen_app
+                    break
+
+            # Add applications saved in the screen
+            qt_screen.load_settings(screen_dict)
 
     def save_settings(self) -> List[Dict]:
         """

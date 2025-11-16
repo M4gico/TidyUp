@@ -10,6 +10,9 @@ from Scripts.Widget.ApplicationListWidget import ApplicationListWidget
 
 
 class ChooseAppWidget(QWidget):
+    """
+    Widget to add application from the file explorer
+    """
     new_application_added = pyqtSignal(Application)
 
     def __init__(self):

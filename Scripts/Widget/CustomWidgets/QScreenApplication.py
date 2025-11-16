@@ -172,3 +172,20 @@ class QScreenApplication(QWidget):
             dict_to_return[f"qt_app_{i}"] = qt_application.save_settings()
 
         return dict_to_return
+
+    def load_settings(self, save_dict: dict):
+        """
+        Load all QApplicationDraggable saved in the dictionary for the specific screen
+        """
+        for key in save_dict.keys():
+             if key.startswith("qt_app_"):
+                # Get the dictionary to create the QApplicationDraggable
+                qt_application_dict = save_dict[key]
+
+                application = Application(
+                    qt_application_dict["app_path_exe"],
+                    qt_application_dict["app_name"],
+                    qt_application_dict["app_project_path"]
+                )
+                qt_application = QApplicationDraggable(application, qt_application_dict["name_qt"])
+                self.add_application(qt_application)

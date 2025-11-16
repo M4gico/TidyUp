@@ -55,12 +55,6 @@ class MainWindow(QMainWindow):
 
         layout_tab = self.tab_layout()
 
-        application_list, screen_list = self.load_settings()
-        if application_list and screen_list:
-            self.application_list_widget.load_settings(application_list)
-            self.screen_widget.load_settings(screen_list)
-            print("Settings loaded successfully.")
-
         main_layout.addLayout(layout_tab)
         main_layout.addLayout(layout_application)
 
@@ -68,6 +62,8 @@ class MainWindow(QMainWindow):
         main_widget.setLayout(main_layout)
 
         self.setCentralWidget(main_widget)
+
+        self.load_settings()
 
     def tab_layout(self) -> QHBoxLayout:
         layout_tab = QHBoxLayout()
@@ -82,7 +78,7 @@ class MainWindow(QMainWindow):
         return layout_tab
 
     def create_new_tab(self):
-        self.save_settings()
+        # self.save_settings_tab()
         self.tab_widget.addTab(QWidget(), f"Tab {self.tab_widget.count() + 1}")
 
     def left_layout(self) -> QVBoxLayout:
@@ -99,23 +95,23 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(choose_app_widget)
         left_layout.addWidget(self.application_list_widget)
 
-        ##TEMP## Add a default application for testing purposes
-        path = r"C:\Users\a.binner\AppData\Local\Zen Browser\zen.exe" #Laptop path
-        if not os.path.exists(path):
-            path = r"D:\Applications\Steam\steam.exe"
-        try:
-            choose_app_widget.add_application(r"C:\Applications\Obsidian\Obsidian.exe")
-        except:
-            pass
-
-        try:
-            choose_app_widget.add_application(path)
-            choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\Programs\Microsoft VS Code\Code.exe")
-            choose_app_widget.add_application(r"D:\Applications\Unity\6000.2.6f2\Editor\Unity.exe")
-            choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\GitHubDesktop\GitHubDesktop.exe")
-            choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\Programs\BeeperTexts\Beeper.exe")
-        except:
-            pass
+        # TODO: ##TEMP## Add a default application for testing purposes
+        # path = r"C:\Users\a.binner\AppData\Local\Zen Browser\zen.exe" #Laptop path
+        # if not os.path.exists(path):
+        #     path = r"D:\Applications\Steam\steam.exe"
+        # try:
+        #     choose_app_widget.add_application(r"C:\Applications\Obsidian\Obsidian.exe")
+        # except:
+        #     pass
+        #
+        # try:
+        #     choose_app_widget.add_application(path)
+        #     choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\Programs\Microsoft VS Code\Code.exe")
+        #     choose_app_widget.add_application(r"D:\Applications\Unity\6000.2.6f2\Editor\Unity.exe")
+        #     choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\GitHubDesktop\GitHubDesktop.exe")
+        #     choose_app_widget.add_application(r"C:\Users\magic\AppData\Local\Programs\BeeperTexts\Beeper.exe")
+        # except:
+        #     pass
 
         return left_layout
 
@@ -133,22 +129,35 @@ class MainWindow(QMainWindow):
         return right_layout
 
     def closeEvent(self, event):
-        """Override the close event to save settings before application closed"""
+        """Override the close event to save settings from all tabs before application closed"""
+        # TODO: Save settings for each tabs separately
         self.save_settings()
         event.accept()
 
-    def save_settings(self):
+    def save_settings_tab(self):
+        """Save settings of a tab"""
         #TODO: Save the settings compared of the tab select
         self.settings.setValue("applicationList", self.application_list_widget.save_settings())
         self.settings.setValue("screenList", self.screen_widget.save_settings())
 
-    def load_settings(self):
+    def load_settings_tab(self):
+        """Load setting of a tab"""
         # Return None if no settings found
         application_list = self.settings.value("applicationList", None)
         screen_list = self.settings.value("screenList", None)
         if any(setting is None for setting in [application_list, screen_list]):
             return None, None
         return application_list, screen_list
+
+    def load_settings(self):
+        application_list, screen_list = self.load_settings_tab()
+        if application_list and screen_list:
+            self.application_list_widget.load_settings(application_list)
+            self.screen_widget.load_settings(screen_list)
+            print("Settings loaded successfully.")
+
+    def save_settings(self):
+        pass
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
