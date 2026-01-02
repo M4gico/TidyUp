@@ -72,6 +72,8 @@ class ApplicationListWidget(QWidget):
         qt_application.deleteLater()
 
     def save_settings(self) -> List[Dict]:
+        if self._list_application_layout.count() == 0:
+            return []
         return self._directory_qt_creation()
 
     def load_settings(self, qt_dict: List[Dict]):
@@ -87,16 +89,19 @@ class ApplicationListWidget(QWidget):
             self.add_application(app.application)
 
     def _directory_qt_creation(self) -> List[Dict]:
-            qt_applications = self._get_qt_application_list()
-            qt_dict = []
+        qt_applications = self._get_qt_application_list()
+        qt_dict = []
 
-            for qt_app in qt_applications:
-                qt_dict.append(qt_app.save_settings())
+        for qt_app in qt_applications:
+            qt_dict.append(qt_app.save_settings())
 
-            return qt_dict
+        return qt_dict
 
     def _get_qt_application_list(self) -> List[QApplicationDraggable]:
+        """Get all the QApplicationDraggable in the layout"""
+        # Get all the widgets in the layout
         widgets = [self._list_application_layout.itemAt(i).widget() for i in range(self._list_application_layout.count()) if self._list_application_layout.itemAt(i).widget() is not None]
+        # Check if the widget is a QApplicationDraggable and return the list of them
         qt_application_widgets = [w for w in widgets if isinstance(w, QApplicationDraggable)]
         return qt_application_widgets
 

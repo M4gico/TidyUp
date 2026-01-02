@@ -10,7 +10,6 @@ class QTabApplication(QTabWidget):
         super().__init__()
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu) # Enable custom signal when asking for context menu
         self.customContextMenuRequested.connect(self.show_context_menu) # Connect the signal to the slot
-        self.name = ""
 
     def show_context_menu(self, position: QPoint):
         tab_index = self.tabBar().tabAt(position)
@@ -25,22 +24,10 @@ class QTabApplication(QTabWidget):
 
             menu.exec(self.mapToGlobal(position))
 
-    def addTab(self, widget, name=None):
-        """If a name is not provided, ask the user for it"""
-        if name is None:
-            name, ok = QInputDialog.getText(self, "New Set of Applications", "Enter the name of the new set:")
-            if ok and name:
-                self.name = name
-                super().addTab(widget, name)
-        else:
-            self.name = name
-            super().addTab(widget, name)
-
     def rename_tab(self, index):
         current_name = self.tabText(index)
         new_name, ok = QInputDialog.getText(self, "Rename Tab", "Enter the new name for the tab:", text=current_name)
         if ok and new_name:
-            self.name = new_name
             self.setTabText(index, new_name)
             self.tab_rename.emit(index, new_name)
 

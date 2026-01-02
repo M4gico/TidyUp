@@ -72,8 +72,7 @@ class Application:
             pixmap = QPixmap.fromImage(image)
 
             return QIcon(pixmap)
-
-        except (OSError, ctypes.WinError):
+        except OSError:
             print(f"Failed to extract icon from {exe_path}. Using default icon.")
             return QIcon(os.path.join(os.path.dirname(__file__), "../../Resources/default_icon_32x32.png"))
         finally:

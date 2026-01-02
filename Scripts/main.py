@@ -38,6 +38,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowIcon(QIcon(logo_path))
 
+        # Structure like this: [{"name": "Tab Name", "applicationList": [...], "screenList": [...]}]
         self.tabs_data = []
         self.current_tab_index = 0
 
@@ -74,38 +75,70 @@ class MainWindow(QMainWindow):
     def tab_layout(self) -> QHBoxLayout:
         layout_tab = QHBoxLayout()
         self.tab_widget = QTabApplication()
-        self.tab_widget.addTab(QWidget(), "Default Set")
+        self.create_new_tab("Default Set") # Create a default tab
 
         self.tab_widget.currentChanged.connect(self.on_tab_changed) # Call when tab is changed
         self.tab_widget.tab_rename.connect(self.handle_tab_rename) # Call when tab is renamed
         self.tab_widget.tab_remove.connect(self.handle_tab_remove) # Call when tab is removed
 
         add_tab_btn = QPushButton("Create set applications")
-        add_tab_btn.clicked.connect(self.create_new_tab)
+        add_tab_btn.clicked.connect(lambda: self.create_new_tab()) # Name asked to the user
 
         layout_tab.addWidget(add_tab_btn)
         layout_tab.addWidget(self.tab_widget)
         return layout_tab
 
-    def create_new_tab(self):
-        self.tab_widget.addTab(QWidget())
+    def create_new_tab(self, name=None):
+        if name is None:
+            name, ok = QInputDialog.getText(self, "New Set", "Enter the name of the new set:")
+            if not ok or not name:
+                return
+
+        self._create_specific_tab(name)
+
+    def _create_specific_tab(self, name):
+        # Don't override the add_tab method of QTabWidget to avoid issues
+
+        # Save the actual tab data if there is at least one tab
+        if self.tab_widget.count() > 0:
+            self.save_tab_data(self.current_tab_index)
+
+        new_data = {"name": name, "applicationList": [], "screenList": []}
+        self.tabs_data.append(new_data)
+
+        self.tab_widget.addTab(QWidget(), name)
+        # Select to the new tab (not do automatically)
+        self.tab_widget.setCurrentIndex(self.tab_widget.count() - 1)
 
     def on_tab_changed(self, index):
-        pass
+        # Save the data of the previous tab
+        self.save_tab_data(self.current_tab_index)
+        self.load_tab_data(index)
+        self.current_tab_index = index
 
     @pyqtSlot(int, str)
     def handle_tab_rename(self, index, new_name):
-        pass
+        """Call when a tab is renamed from the context menu"""
+        self.tabs_data[index]["name"] = new_name
 
     @pyqtSlot(int)
     def handle_tab_remove(self, index):
-        pass
+        """Call when a tab is removed from the context menu"""
+        del self.tabs_data[index]
+
+        # If the current tab is after the removed one, decrement the index
+        if self.current_tab_index > index:
+            self.current_tab_index -= 1
 
     def save_tab_data(self, index):
-        pass
+        self.tabs_data[index]["applicationList"] = self.application_list_widget.save_settings()
+        self.tabs_data[index]["screenList"] = self.screen_widget.save_settings()
 
     def load_tab_data(self, index):
-        pass
+        data = self.tabs_data[index]
+        # Give empty list if no data to avoid errors
+        self.application_list_widget.load_settings(data.get("applicationList", []))
+        self.screen_widget.load_settings(data.get("screenList", []))
 
 # endregion
 
