@@ -1,15 +1,17 @@
 ﻿import os.path
 from threading import Lock
 
-from PyQt6.QtCore import Qt, QSettings
+from PyQt6.QtCore import Qt, QSettings, pyqtSlot
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QLabel, QTabWidget, QPushButton
+from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QLabel, QTabWidget, QPushButton, \
+    QInputDialog
 import sys
 from PyQt6.QtWidgets import QApplication
 
 from Scripts.CustomObjects.SettingsHandler import SettingsHandler
 from Scripts.Widget.ApplicationListWidget import ApplicationListWidget
 from Scripts.Widget.ChooseAppWidget import ChooseAppWidget
+from Scripts.Widget.CustomWidgets.QTabApplication import QTabApplication
 from Scripts.Widget.ScreenWidget import ScreenWidget
 
 """
@@ -35,6 +37,9 @@ class MainWindow(QMainWindow):
         logo_path = os.path.join(project_root, "Resources", "Tidy_up_logo.png")
 
         self.setWindowIcon(QIcon(logo_path))
+
+        self.tabs_data = []
+        self.current_tab_index = 0
 
         self.init_UI()
 
@@ -65,10 +70,15 @@ class MainWindow(QMainWindow):
 
         self.load_settings()
 
+# region Tab Layout
     def tab_layout(self) -> QHBoxLayout:
         layout_tab = QHBoxLayout()
-        self.tab_widget = QTabWidget()
-        self.tab_widget.addTab(QWidget(), "Tab 1")
+        self.tab_widget = QTabApplication()
+        self.tab_widget.addTab(QWidget(), "Default Set")
+
+        self.tab_widget.currentChanged.connect(self.on_tab_changed) # Call when tab is changed
+        self.tab_widget.tab_rename.connect(self.handle_tab_rename) # Call when tab is renamed
+        self.tab_widget.tab_remove.connect(self.handle_tab_remove) # Call when tab is removed
 
         add_tab_btn = QPushButton("Create set applications")
         add_tab_btn.clicked.connect(self.create_new_tab)
@@ -78,8 +88,26 @@ class MainWindow(QMainWindow):
         return layout_tab
 
     def create_new_tab(self):
-        # self.save_settings_tab()
-        self.tab_widget.addTab(QWidget(), f"Tab {self.tab_widget.count() + 1}")
+        self.tab_widget.addTab(QWidget())
+
+    def on_tab_changed(self, index):
+        pass
+
+    @pyqtSlot(int, str)
+    def handle_tab_rename(self, index, new_name):
+        pass
+
+    @pyqtSlot(int)
+    def handle_tab_remove(self, index):
+        pass
+
+    def save_tab_data(self, index):
+        pass
+
+    def load_tab_data(self, index):
+        pass
+
+# endregion
 
     def left_layout(self) -> QVBoxLayout:
         left_layout = QVBoxLayout()
