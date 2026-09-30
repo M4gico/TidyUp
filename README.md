@@ -8,6 +8,8 @@ TidyUp is a small Windows application, made with Python and PyQt6, that opens a 
 
 <p align="center">
   <img src="Resources/screenshot_main.png" alt="Screen of the main window">
+  <br>
+  <i>Example window of the app</i>
 </p>
 
 ## How to use it
@@ -22,7 +24,10 @@ A right click on an application gives some options: change the name displayed, a
 
 The applications can be grouped in sets, one set per tab, for example one for work and one for gaming. A new set is created with **Create set applications**, and a right click on a tab allows to rename or close it. Each tab keeps its own list of applications and its own screens.
 
-<!-- GIF: click on Launch Applications and the applications opening on their screens (Resources/launch_demo.gif) -->
+<p align="center">
+  <img src="Resources/launch_demo.gif" alt="Launching applications and moving them to their screen" />
+  <br>
+  <i>Launch demo of open multiple applications on 3 screens</i>
 
 Everything is saved automatically when a tab is created, changed, renamed or closed, and when the application is closed. Thus, the next time TidyUp is opened, the tabs and the applications are back as they were.
 
@@ -55,8 +60,6 @@ Then, from the root folder of the project:
 ```
 python -m Scripts.main
 ```
-
-The exe is created in `dist/TidyUp.exe` and can be moved and run anywhere, no Python install needed on the target machine.
 
 ## Known limitations
 
