@@ -69,6 +69,8 @@ class ApplicationListWidget(QWidget):
         if spacing:
             del spacing
 
+        # Remove it from the layout now, deleteLater is too late for the duplicate check when loading another tab
+        self._list_application_layout.removeWidget(qt_application)
         qt_application.deleteLater()
 
     def save_settings(self) -> List[Dict]:
@@ -82,7 +84,12 @@ class ApplicationListWidget(QWidget):
 
         # Create the qt application from the value in dictionaries
         for dict in qt_dict:
-            application = Application(dict["app_path_exe"], dict["app_name"], dict["app_project_path"])
+            try:
+                application = Application(dict["app_path_exe"], dict["app_name"], dict["app_project_path"])
+            except (KeyError, ValueError) as e:
+                # The application has been uninstalled or moved since the last session
+                print(f"Application not loaded: {e}")
+                continue
             qt_applications.append(QApplicationDraggable(application, dict["name_qt"]))
 
         for app in qt_applications:

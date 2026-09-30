@@ -41,5 +41,6 @@ class QTabApplication(QTabWidget):
                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
 
         if confirm == QMessageBox.StandardButton.Yes:
-            self.removeTab(index)
+            # Emit before removing the tab: removeTab triggers currentChanged, the data must be updated before
             self.tab_remove.emit(index)
+            self.removeTab(index)

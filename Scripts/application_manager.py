@@ -1,142 +1,210 @@
-﻿import subprocess
+import subprocess
 import time
-from typing import List, Dict, Union
+from dataclasses import dataclass, field
+from typing import List, Dict, Optional, Set
 
-import psutil
-import win32con
-import win32gui
-import win32process
-from PyQt6.QtCore import QRect
-from difflib import SequenceMatcher
+from PyQt6.QtCore import QObject, QThread, pyqtSignal, pyqtSlot
 
+from Scripts.CustomObjects.Application import Application
+from Scripts.CustomObjects.WindowUtils import MonitorInfo, ProcessCache, monitor_for_qscreen, find_app_windows, \
+    is_window_hung, place_maximized, is_placed
 from Scripts.Widget.CustomWidgets.QScreenApplication import QScreenApplication
 
-def launch_applications(screen_applications: List[QScreenApplication]):
+POLL_INTERVAL = 0.3  # Seconds between two scans of the windows
+LAUNCH_TIMEOUT = 120  # Maximum time to wait all the windows (Unity can be long to open a project)
+EXISTING_GRACE = 2  # Time to wait a new window after the launched process exited before moving the existing ones
+RETRY_DELAY = 0.6  # Time given to the application to apply the move before trying again
+STABILIZE = 3  # The window has to stay on the screen this time (some apps restore their own position after opening)
+MAX_ATTEMPTS = 6  # Maximum number of moves for one window
+
+
+@dataclass
+class WindowState:
+    attempts: int = 0
+    last_attempt: float = 0.0
+    placed_since: Optional[float] = None
+
+
+@dataclass
+class LaunchTarget:
+    name: str
+    application: Application
+    monitor: MonitorInfo
+
+    process: Optional[subprocess.Popen] = None
+    process_exit_time: Optional[float] = None
+    pre_existing: Set[int] = field(default_factory=set)  # Windows already opened before the launch
+    windows: Dict[int, WindowState] = field(default_factory=dict)
+    done: bool = False
+    error: Optional[str] = None
+
+    @property
+    def launched_pids(self) -> List[int]:
+        return [self.process.pid] if self.process else []
+
+
+def build_targets(screen_applications: List[QScreenApplication]) -> List[LaunchTarget]:
+    """Must be called in the main thread: read the Qt widgets to create plain data for the worker"""
+    targets = []
     for screen in screen_applications:
-        # Give the offest in the 2 first parameters and the screen size in the 2 last parameters
-        screen_size = screen.screen.geometry()
-
+        monitor = monitor_for_qscreen(screen.screen)
         for qt_application in screen.qt_applications:
-            application = qt_application.application
+            targets.append(LaunchTarget(qt_application.name_app.text(), qt_application.application, monitor))
+    return targets
+
+
+class LaunchWorker(QObject):
+    """Launch the applications and move their windows on their screen without blocking the UI"""
+    app_status = pyqtSignal(str, str)  # Name of the application, status message
+    finished = pyqtSignal(list)  # List of error messages
+
+    def __init__(self, targets: List[LaunchTarget]):
+        super().__init__()
+        self._targets = targets
+        self._cancelled = False
+        # Know which target moved a window to not move it on 2 screens if the same app is on several screens
+        self._window_owner: Dict[int, LaunchTarget] = {}
+
+    def cancel(self):
+        self._cancelled = True
+
+    @pyqtSlot()
+    def run(self):
+        try:
+            self._launch_all()
+            self._place_windows()
+        except Exception as e:
+            self.finished.emit([f"Unexpected error: {e}"])
+            return
+
+        errors = [f"{t.name}: {t.error}" for t in self._targets if t.error]
+        self.finished.emit(errors)
+
+    def _launch_all(self):
+        """Launch all the applications at the same time, the windows are waited after"""
+        cache = ProcessCache()
+        for target in self._targets:
             try:
-                application.open_application()
+                existing = find_app_windows(target.application.app_path_exe, cache=cache)
+                target.pre_existing = set(existing)
 
-                time.sleep(5) #TODO: Change it after /to put it in a thread and wait until the app is sucessfully opened
-                # process.wait(timeout=timeout_seconds)
+                # Already running: just move it, except if a project has to be opened
+                if existing and not target.application.app_project_path:
+                    self.app_status.emit(target.name, "already running, moving it")
+                    continue
 
-                _move_app_to_screen(application.name, screen_size)
-
+                target.process = target.application.open_application()
+                self.app_status.emit(target.name, "launched, waiting for the window")
             except Exception as e:
-                raise RuntimeError(f"Failed to open application {application.name}: {e}")
+                target.error = f"failed to launch ({e})"
+                target.done = True
+                self.app_status.emit(target.name, target.error)
 
-def _move_app_to_screen(app_name: str, screen_geometry):
+    def _place_windows(self):
+        start = time.time()
+        while not self._cancelled and not all(t.done for t in self._targets):
+            if time.time() - start > LAUNCH_TIMEOUT:
+                for target in self._targets:
+                    if not target.done:
+                        self._finish_target_on_timeout(target)
+                return
+
+            cache = ProcessCache()
+            for target in self._targets:
+                if not target.done:
+                    try:
+                        self._update_target(target, cache)
+                    except Exception as e:
+                        target.error = str(e)
+                        target.done = True
+                        self.app_status.emit(target.name, target.error)
+
+            time.sleep(POLL_INTERVAL)
+
+    def _update_target(self, target: LaunchTarget, cache: ProcessCache):
+        now = time.time()
+        candidates = self._get_candidate_windows(target, cache, now)
+
+        for hwnd in candidates:
+            self._window_owner[hwnd] = target
+            state = target.windows.setdefault(hwnd, WindowState())
+
+            if is_placed(hwnd, target.monitor):
+                if state.placed_since is None:
+                    state.placed_since = now
+                continue
+
+            state.placed_since = None
+            # Wait the async move of the previous attempt and don't send moves to a frozen application
+            if state.attempts < MAX_ATTEMPTS and now - state.last_attempt >= RETRY_DELAY and not is_window_hung(hwnd):
+                place_maximized(hwnd, target.monitor)
+                state.attempts += 1
+                state.last_attempt = now
+
+        if not candidates:
+            return
+
+        states = [target.windows[hwnd] for hwnd in candidates]
+        stable = [s for s in states if s.placed_since is not None and now - s.placed_since >= STABILIZE]
+        exhausted = [s for s in states if s.placed_since is None and s.attempts >= MAX_ATTEMPTS
+                     and now - s.last_attempt >= RETRY_DELAY]
+
+        # Finish when every window is stable on the screen or can't be moved anymore
+        if len(stable) + len(exhausted) == len(states):
+            target.done = True
+            if stable:
+                self.app_status.emit(target.name, "placed")
+            else:
+                target.error = "the window could not be moved (the application may run as administrator)"
+                self.app_status.emit(target.name, target.error)
+
+    def _get_candidate_windows(self, target: LaunchTarget, cache: ProcessCache, now: float) -> List[int]:
+        windows = find_app_windows(target.application.app_path_exe, target.launched_pids, cache)
+        windows = [w for w in windows if self._window_owner.get(w, target) is target]
+
+        # Not launched: the application was already running, take its windows
+        if target.process is None:
+            return windows
+
+        new_windows = [w for w in windows if w not in target.pre_existing]
+        if new_windows:
+            return new_windows
+
+        # The launched process gave the work to the instance already running (single instance apps) and exited,
+        # so the existing windows are the ones to move
+        if target.process_exit_time is None and target.process.poll() is not None:
+            target.process_exit_time = now
+        if target.process_exit_time is not None and now - target.process_exit_time >= EXISTING_GRACE:
+            return windows
+        return []
+
+    def _finish_target_on_timeout(self, target: LaunchTarget):
+        target.done = True
+        if any(s.placed_since is not None for s in target.windows.values()):
+            self.app_status.emit(target.name, "placed")
+        elif target.windows:
+            target.error = "the window could not be moved on the screen"
+        else:
+            target.error = f"no window found after {LAUNCH_TIMEOUT} seconds"
+
+        if target.error:
+            self.app_status.emit(target.name, target.error)
+
+
+def launch_applications(screen_applications: List[QScreenApplication], parent: QObject):
     """
-    Take the application to maximize it on the screen
+    Start the launch in a thread
+    :return: the thread and the worker, the caller has to keep a reference on them
     """
-    # Get all visible windows on the screen
-    windows_on_screen = _get_windows_visible(screen_geometry)
+    targets = build_targets(screen_applications)
 
-    # Get the handler of the specific application
-    window_handler: Union[int, None] = _get_handler_of_the_app(windows_on_screen, app_name)
+    thread = QThread(parent)
+    worker = LaunchWorker(targets)
+    worker.moveToThread(thread)
 
-    if window_handler is None:
-        print("Window handler not found for app:", app_name)
-        return
+    thread.started.connect(worker.run)
+    worker.finished.connect(thread.quit)
+    worker.finished.connect(worker.deleteLater)
+    thread.finished.connect(thread.deleteLater)
 
-    # Move the application to the screen and maxize it
-    _maximize_window_on_screen(window_handler, screen_geometry, app_name)
-
-def _maximize_window_on_screen(hwnd, screen_geomtry, app_name):
-    win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
-    win32gui.SetForegroundWindow(hwnd)
-    # win32con.HWND_TOP parameter put the window at the top of the Z order, meaning in front of other windows
-    # Move the window in the center of the screen not maximized to avoid issues for maximize it after on the right screen
-    # The last parameter can handle some rights but 0 is ok for now, can be used to free threads
-    win32gui.SetWindowPos(hwnd, win32con.HWND_TOP, int(screen_geomtry.x() + screen_geomtry.width()/2),
-                          int(screen_geomtry.y() + screen_geomtry.height()/2),
-                          int(screen_geomtry.width()/2), int(screen_geomtry.height()/2),
-                          0)
-
-    win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
-
-def _get_handler_of_the_app(windows_on_screen: Dict[str, int], app_name: str) -> Union[int, None]:
-    for window_name, handler in windows_on_screen.items():
-        window_name_possibility = _split_name(window_name)
-        app_name_possibility = _split_name(app_name)
-        # Check match between window name and app name
-        if any(part in window_name_possibility for part in app_name_possibility):
-            return handler
-    return None
-
-
-# def _get_handler_of_the_app(windows_on_screen: Dict[str, int], app_name: str) -> Union[int, None]:
-#     best_match = None
-#     best_ratio = 0.0
-#     threshold = 0.6  # Minimum similarity score
-#
-#     app_name_lower = app_name.lower()
-#
-#     for window_name, handler in windows_on_screen.items():
-#         window_name_lower = window_name.lower()
-#
-#         # Calculate similarity ratio
-#         ratio = SequenceMatcher(None, app_name_lower, window_name_lower).ratio()
-#
-#         # Also check if app name is substring of window name
-#         if app_name_lower in window_name_lower:
-#             ratio = max(ratio, 0.8)
-#
-#         if ratio > best_ratio and ratio >= threshold:
-#             best_ratio = ratio
-#             best_match = handler
-#
-#     return best_match
-
-def _split_name(name: str) -> List[str]:
-    """
-    Split the name of the application in several parts to find a better match
-    :param name: the name of the application
-    :return: a list of string with the different parts of the name
-    """
-    name = name.lower()
-    for sep in [' ', '_', '-']:
-        name = name.replace(sep, ' ')
-    name_list = name.split()
-    name_list.append(name[:4]) # Add the first 4 letters as a possibility
-    return name_list
-
-
-def _get_windows_visible(screen_geometry):
-    """
-    :return: all large visible windows name associated with their handler
-    """
-    windows: Dict[str, int] = {}
-    def enum_windows_callback(hwnd, extra):
-        if win32gui.IsWindowVisible(hwnd):
-            window_name = win32gui.GetWindowText(hwnd)
-            if window_name != "" and _check_window_size(screen_geometry, hwnd):
-                windows[window_name] = hwnd
-
-    win32gui.EnumWindows(enum_windows_callback, None)
-    return windows
-
-def _check_window_size(screen_geometry, app_hwnd) -> bool:
-    """
-    Check if the window take at least half of the screen
-    :param screen_geometry: the geometry of the screen
-    :param app_hwnd: the specific application handler
-    :return: if the window take at least half of the screen
-    """
-    #TODO: Get the size of the screen where is the app and not the screen we want to put it
-
-    #TODO: If the window is lower than half screen, put it in a list if the name match
-    #TODO: and check a several times if the app is still visible
-    #TODO: If it's the case, take it and move it to the screen
-    left, top, right, bottom = win32gui.GetWindowRect(app_hwnd)
-    window_width = right - left
-    window_height = bottom - top
-
-    screen_width = screen_geometry.width()
-    screen_height = screen_geometry.height()
-
-    return window_width >= screen_width/2 and window_height >= screen_height/2
+    return thread, worker

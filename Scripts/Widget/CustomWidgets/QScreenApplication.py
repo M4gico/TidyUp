@@ -96,6 +96,13 @@ class QScreenApplication(QWidget):
         # The widget will be deleted by the caller of the signal
         qt_application.deleteLater()
 
+    def clear_applications(self):
+        """Remove all the applications of the screen (used before loading the applications of another tab)"""
+        for qt_application in self.qt_applications:
+            qt_application.deleteLater()
+        self.qt_applications.clear()
+        self.app_list_widget.clear()
+
     #region Drag and Drop Events
     def dragEnterEvent(self, event):
         self.verify_drag(event)
@@ -182,10 +189,15 @@ class QScreenApplication(QWidget):
                 # Get the dictionary to create the QApplicationDraggable
                 qt_application_dict = save_dict[key]
 
-                application = Application(
-                    qt_application_dict["app_path_exe"],
-                    qt_application_dict["app_name"],
-                    qt_application_dict["app_project_path"]
-                )
+                try:
+                    application = Application(
+                        qt_application_dict["app_path_exe"],
+                        qt_application_dict["app_name"],
+                        qt_application_dict["app_project_path"]
+                    )
+                except (KeyError, ValueError) as e:
+                    # The application has been uninstalled or moved since the last session
+                    print(f"Application not loaded on the screen {self.screen_name}: {e}")
+                    continue
                 qt_application = QApplicationDraggable(application, qt_application_dict["name_qt"])
                 self.add_application(qt_application)

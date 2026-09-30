@@ -6,6 +6,7 @@ from typing import Optional
 from PyQt6.QtGui import QIcon, QImage, QPixmap
 from PyQt6.QtWidgets import QApplication
 from Scripts.CustomObjects.ExtractIconExe import extract_icon, IconSize, user32, ICONINFO, gdi32, BITMAP
+from Scripts.CustomObjects.ResourcePath import resource_path
 
 # from Scripts.CustomObjects.ExtractIconExe import extract_icon, IconSize
 
@@ -32,7 +33,7 @@ class Application:
                 self.icon = self._extract_icon_from_exe(app_path_exe)
             except Exception as e:
                 print(f"Error extracting icon: {e}")
-                self.icon = QIcon("../Resources/default_icon_32x32.png")
+                self.icon = QIcon(resource_path("default_icon_32x32.png"))
         else:
             raise ValueError(f"Invalid application path: {app_path_exe}")
 
@@ -48,7 +49,10 @@ class Application:
             app = [self._app_path_exe]
 
         # cwd is to set the working directory for avoid issues with relative paths
-        process = subprocess.Popen(app)
+        try:
+            process = subprocess.Popen(app, cwd=os.path.dirname(self._app_path_exe))
+        except OSError as e:
+            raise RuntimeError(f"Can't start {self._app_path_exe}: {e.strerror or e}") from e
 
         return process
 
@@ -74,7 +78,7 @@ class Application:
             return QIcon(pixmap)
         except OSError:
             print(f"Failed to extract icon from {exe_path}. Using default icon.")
-            return QIcon(os.path.join(os.path.dirname(__file__), "../../Resources/default_icon_32x32.png"))
+            return QIcon(resource_path("default_icon_32x32.png"))
         finally:
             # Cleanup Windows objects
             if icon_info:
