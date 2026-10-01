@@ -25,7 +25,7 @@ A right click on an application gives some options: change the name displayed, a
 The applications can be grouped in sets, one set per tab, for example one for work and one for gaming. A new set is created with **Create set applications**, and a right click on a tab allows to rename or close it. Each tab keeps its own list of applications and its own screens.
 
 <p align="center">
-  <img src="Resources/launch_demo.gif" alt="Launching applications and moving them to their screen" />
+  <img src="Resources/launch_demo.gif" alt="Launching applications and moving them to their screen" width="100%" />
   <br>
   <i>Launch demo of open multiple applications on 3 screens</i>
 
